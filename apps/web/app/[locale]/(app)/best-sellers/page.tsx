@@ -60,7 +60,7 @@ export default async function BestSellersPage({
     }),
   ])
 
-  const recipeMap = new Map(recipes.map(r => [r.id, r]))
+  const recipeMap = new Map(recipes.map((r: { id: string; name: string }) => [r.id, r]))
   const maxSales = Number(sales[0]?._sum.quantity ?? 1)
 
   return (
