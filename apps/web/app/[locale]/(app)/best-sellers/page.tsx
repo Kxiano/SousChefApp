@@ -94,7 +94,7 @@ export default async function BestSellersPage({
         <div style={{ ...emptyStyle, marginTop: '28px' }}>No sales data for this period. Log some sales below.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '24px' }}>
-          {sales.map((entry, i) => {
+          {sales.map((entry: any, i: number) => {
             const recipe = recipeMap.get(entry.recipeId)
             if (!recipe) return null
             const qty = Number(entry._sum.quantity ?? 0)
