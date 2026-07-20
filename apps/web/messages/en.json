@@ -1,0 +1,16 @@
+{
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "recipes": "Recipes",
+    "calculator": "Calculator",
+    "portions": "Portions",
+    "purchases": "Purchases",
+    "shifts": "Shifts",
+    "best_sellers": "Best Sellers",
+    "notes": "Notes",
+    "ai_chef": "AI Chef",
+    "manage_billing": "Manage Billing",
+    "sign_out": "Sign out"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "Navigation": {
+    "dashboard": "Painel",
+    "inventory": "Estoque",
+    "recipes": "Receitas",
+    "calculator": "Calculadora",
+    "portions": "Porções",
+    "purchases": "Compras",
+    "shifts": "Turnos",
+    "best_sellers": "Mais Vendidos",
+    "notes": "Avisos",
+    "ai_chef": "Chef IA",
+    "manage_billing": "Gerenciar Assinatura",
+    "sign_out": "Sair"
+  }
+}

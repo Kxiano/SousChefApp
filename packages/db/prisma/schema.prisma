@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Restaurant {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String
+  language               String    @default("en")
+  stripeCustomerId       String?   @map("stripe_customer_id")
+  stripeSubscriptionId   String?   @map("stripe_subscription_id")
+  subscriptionStatus     String?   @default("trialing") @map("subscription_status")
+  gracePeriodEndsAt      DateTime? @map("grace_period_ends_at") @db.Timestamptz()
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  profiles               Profile[]
+  inviteTokens           InviteToken[]
+  ingredients            Ingredient[]
+  recipes                Recipe[]
+  readyPortions          ReadyPortion[]
+  salesEvents            SalesEvent[]
+  purchaseOrders         PurchaseOrder[]
+  shifts                 Shift[]
+  notes                  Note[]
+  chatMessages           ChatMessage[]
+
+  @@map("restaurants")
+}
+
+model Profile {
+  id                     String    @id @db.Uuid // Maps to auth.users.id
+  restaurantId           String    @map("restaurant_id") @db.Uuid
+  role                   String    @default("staff")
+  displayName            String?   @map("display_name")
+  language               String?
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  restaurant             Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdInviteTokens    InviteToken[] @relation("CreatedTokens")
+  createdSalesEvents     SalesEvent[]  @relation("CreatedSalesEvents")
+  createdPurchaseOrders  PurchaseOrder[] @relation("CreatedPurchaseOrders")
+  shifts                 Shift[]
+  notes                  Note[]
+  chatMessages           ChatMessage[]
+
+  @@map("profiles")
+}
+
+model InviteToken {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  token         String    @unique
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz()
+  usedAt        DateTime? @map("used_at") @db.Timestamptz()
+  createdById   String    @map("created_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdBy     Profile    @relation("CreatedTokens", fields: [createdById], references: [id])
+
+  @@map("invite_tokens")
+}
+
+model Ingredient {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId        String    @map("restaurant_id") @db.Uuid
+  name                String
+  unit                String
+  quantity            Decimal   @default(0) @db.Decimal
+  lowStockThreshold   Decimal   @default(0) @map("low_stock_threshold") @db.Decimal
+  costPerUnit         Decimal?  @map("cost_per_unit") @db.Decimal
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  recipeIngredients   RecipeIngredient[]
+  purchaseOrderItems  PurchaseOrderItem[]
+
+  @@map("ingredients")
+}
+
+model Recipe {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  name          String
+  yieldPortions Int       @default(1) @map("yield_portions")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  ingredients   RecipeIngredient[]
+  readyPortions ReadyPortion[]
+  salesEvents   SalesEvent[]
+
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId            String    @map("recipe_id") @db.Uuid
+  ingredientId        String    @map("ingredient_id") @db.Uuid
+  quantityPerPortion  Decimal   @map("quantity_per_portion") @db.Decimal
+
+  recipe              Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient          Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model ReadyPortion {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  recipeId      String    @map("recipe_id") @db.Uuid
+  quantity      Decimal   @default(0) @db.Decimal
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  recipe        Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("ready_portions")
+}
+
+model SalesEvent {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  recipeId      String    @map("recipe_id") @db.Uuid
+  quantity      Decimal   @db.Decimal
+  eventType     String    @default("sold") @map("event_type")
+  recordedAt    DateTime  @default(now()) @map("recorded_at") @db.Timestamptz()
+  source        String?   @default("manual")
+  createdById   String?   @map("created_by") @db.Uuid
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  recipe        Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdBy     Profile?   @relation("CreatedSalesEvents", fields: [createdById], references: [id])
+
+  @@map("sales_events")
+}
+
+model PurchaseOrder {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  status        String    @default("draft")
+  notes         String?
+  createdById   String?   @map("created_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdBy     Profile?   @relation("CreatedPurchaseOrders", fields: [createdById], references: [id])
+  items         PurchaseOrderItem[]
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purchaseOrderId    String    @map("purchase_order_id") @db.Uuid
+  ingredientId       String    @map("ingredient_id") @db.Uuid
+  quantityRequested  Decimal   @map("quantity_requested") @db.Decimal
+  quantityReceived   Decimal?  @map("quantity_received") @db.Decimal
+
+  purchaseOrder      PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  ingredient         Ingredient    @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_order_items")
+}
+
+model Shift {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  profileId     String    @map("profile_id") @db.Uuid
+  startsAt      DateTime  @map("starts_at") @db.Timestamptz()
+  endsAt        DateTime  @map("ends_at") @db.Timestamptz()
+  roleLabel     String?   @map("role_label")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  profile       Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("shifts")
+}
+
+model Note {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  authorId      String    @map("author_id") @db.Uuid
+  content       String
+  isUrgent      Boolean   @default(false) @map("is_urgent")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  author        Profile    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
+
+model ChatMessage {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId  String    @map("restaurant_id") @db.Uuid
+  profileId     String    @map("profile_id") @db.Uuid
+  role          String
+  content       String
+  functionCalls Json?     @map("function_calls")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  profile       Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
