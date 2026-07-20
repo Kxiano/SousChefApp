@@ -106,9 +106,9 @@ export default async function AppLayout({
             {user.email}
           </p>
           <div style={{ display: 'flex', gap: '4px', padding: '0 10px 8px' }}>
-            <Link href="/en/dashboard" className="text-xs text-[var(--color-text-muted)] hover:text-white">EN</Link>
-            <span className="text-xs text-[var(--color-text-muted)]">|</span>
-            <Link href="/pt-BR/dashboard" className="text-xs text-[var(--color-text-muted)] hover:text-white">PT</Link>
+            <Link href="/en/dashboard" style={{ fontSize: '12px', color: 'var(--color-text-muted)', textDecoration: 'none' }}>EN</Link>
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>|</span>
+            <Link href="/pt-BR/dashboard" style={{ fontSize: '12px', color: 'var(--color-text-muted)', textDecoration: 'none' }}>PT</Link>
           </div>
           <form action="/api/stripe/portal" method="POST" style={{ marginBottom: '4px' }}>
             <button

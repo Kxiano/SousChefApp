@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@sous-chef/web",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@sous-chef/db && pnpm turbo run build --filter=@sous-chef/web",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "outputDirectory": ".next"
