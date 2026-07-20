@@ -36,7 +36,7 @@ export default async function CalculatorPage({
     },
   })
 
-  const selectedRecipe = recipeId ? recipes.find(r => r.id === recipeId) : null
+  const selectedRecipe = recipeId ? recipes.find((r: any) => r.id === recipeId) : null
 
   // Calculate requirements if a recipe and portions are selected
   type RequirementRow = {
@@ -52,7 +52,7 @@ export default async function CalculatorPage({
   let totalCost = 0
 
   if (selectedRecipe) {
-    requirements = selectedRecipe.ingredients.map(ri => {
+    requirements = selectedRecipe.ingredients.map((ri: any) => {
       const required = Number(ri.quantityPerPortion) * portionsNum
       const available = Number(ri.ingredient.quantity)
       const costPerUnit = ri.ingredient.costPerUnit ? Number(ri.ingredient.costPerUnit) : null
@@ -70,7 +70,7 @@ export default async function CalculatorPage({
     })
   }
 
-  const hasShortage = requirements.some(r => r.isShort)
+  const hasShortage = requirements.some((r: any) => r.isShort)
 
   return (
     <div style={{ padding: '32px', maxWidth: '780px' }}>
@@ -85,7 +85,7 @@ export default async function CalculatorPage({
           <label style={labelStyle}>Recipe</label>
           <select name="recipe" style={inputStyle} defaultValue={recipeId ?? ''}>
             <option value="">Select a recipe…</option>
-            {recipes.map(r => (
+            {recipes.map((r: any) => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
           </select>
