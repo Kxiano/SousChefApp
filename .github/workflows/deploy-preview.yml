@@ -1,0 +1,104 @@
+name: Deploy Preview
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Quality Gate ──────────────────────────────────────────────
+  ci:
+    name: Quality Gate
+    uses: ./.github/workflows/reusable-ci.yml
+    secrets: inherit
+
+  # ── Preview Deployment ────────────────────────────────────────
+  deploy-preview:
+    name: Deploy to Vercel Preview
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: preview
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.preview-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @sous-chef/db exec prisma generate
+
+      - name: Run database migrations (staging)
+        run: pnpm --filter @sous-chef/db run migrate:deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PREVIEW }}
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment (preview)
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        run: |
+          PREVIEW_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # Comment preview URL on the PR
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = '${{ steps.deploy.outputs.preview-url }}';
+            const sha = context.sha.substring(0, 7);
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: [
+                '## 🚀 Preview Deployment Ready',
+                '',
+                '| | |',
+                '|---|---|',
+                '| **Status** | ✅ Deployed |',
+                '| **Preview URL** | ' + previewUrl + ' |',
+                '| **Commit** | `' + sha + '` |',
+                '| **CI Checks** | All passed ✓ |',
+                '',
+                '*This preview will be updated automatically on every push to this branch.*'
+              ].join('\n')
+            });
