@@ -159,7 +159,7 @@ export default async function BestSellersPage({
             <label style={labelStyle}>Recipe</label>
             <select name="recipeId" required style={inputStyle}>
               <option value="">Select a recipe…</option>
-              {recipes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              {recipes.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           </div>
           <div>
