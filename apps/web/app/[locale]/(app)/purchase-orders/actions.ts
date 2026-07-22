@@ -41,10 +41,41 @@ export async function createPurchaseOrder(formData: FormData) {
 
 export async function updateOrderStatus(id: string, status: 'draft' | 'sent' | 'received') {
   const profile = await getProfile()
-  await prisma.purchaseOrder.updateMany({
-    where: { id, restaurantId: profile.restaurantId },
-    data: { status },
-  })
+  const restaurantId = profile.restaurantId
+
+  if (status === 'received') {
+    const order = await prisma.purchaseOrder.findFirst({
+      where: { id, restaurantId },
+      include: { items: true },
+    })
+
+    if (order && order.status !== 'received') {
+      await prisma.$transaction(async (tx) => {
+        await tx.purchaseOrder.update({
+          where: { id },
+          data: { status: 'received' },
+        })
+
+        for (const item of order.items) {
+          await tx.purchaseOrderItem.update({
+            where: { id: item.id },
+            data: { quantityReceived: item.quantityRequested },
+          })
+
+          await tx.ingredient.update({
+            where: { id: item.ingredientId },
+            data: { quantity: { increment: item.quantityRequested } },
+          })
+        }
+      })
+    }
+  } else {
+    await prisma.purchaseOrder.updateMany({
+      where: { id, restaurantId },
+      data: { status },
+    })
+  }
+
   revalidatePath('/purchase-orders')
 }
 
