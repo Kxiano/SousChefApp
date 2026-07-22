@@ -17,7 +17,7 @@ export default function BillingLockedPage() {
         </h1>
         
         <p className="mb-8 text-[var(--color-text-secondary)]">
-          Your kitchen's subscription has expired or a payment failed. Please update your billing information to regain access to Sous Chef.
+          Your kitchen&apos;s subscription has expired or a payment failed. Please update your billing information to regain access to Sous Chef.
         </p>
 
         <form action="/api/stripe/portal" method="POST" className="w-full">

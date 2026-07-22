@@ -66,7 +66,7 @@ export default async function PurchaseOrdersPage() {
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-            {lowStockIngredients.map((ing, i) => (
+            {lowStockIngredients.map((ing, _i) => (
               <div key={ing.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '8px', alignItems: 'center' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: Number(ing.quantity) <= Number(ing.lowStockThreshold) ? 'var(--color-danger)' : 'var(--color-text-secondary)' }}>
                   <Package size={13} />

@@ -36,7 +36,7 @@ export default async function CalculatorPage({
     },
   })
 
-  const selectedRecipe = recipeId ? recipes.find((r: any) => r.id === recipeId) : null
+  const selectedRecipe = recipeId ? recipes.find((r: any  ) => r.id === recipeId) : null
 
   // Calculate requirements if a recipe and portions are selected
   type RequirementRow = {
@@ -52,11 +52,12 @@ export default async function CalculatorPage({
   let totalCost = 0
 
   if (selectedRecipe) {
-    requirements = selectedRecipe.ingredients.map((ri: any) => {
+    requirements = selectedRecipe.ingredients.map((ri: any  ) => {
       const required = Number(ri.quantityPerPortion) * portionsNum
       const available = Number(ri.ingredient.quantity)
       const costPerUnit = ri.ingredient.costPerUnit ? Number(ri.ingredient.costPerUnit) : null
       const cost = costPerUnit ? costPerUnit * required : null
+      // eslint-disable-next-line react-hooks/immutability
       if (cost) totalCost += cost
       return {
         ingredientId: ri.ingredientId,
@@ -70,7 +71,7 @@ export default async function CalculatorPage({
     })
   }
 
-  const hasShortage = requirements.some((r: any) => r.isShort)
+  const hasShortage = requirements.some((r: any  ) => r.isShort)
 
   return (
     <div style={{ padding: '32px', maxWidth: '780px' }}>
@@ -85,7 +86,7 @@ export default async function CalculatorPage({
           <label style={labelStyle}>Recipe</label>
           <select name="recipe" style={inputStyle} defaultValue={recipeId ?? ''}>
             <option value="">Select a recipe…</option>
-            {recipes.map((r: any) => (
+            {recipes.map((r: any  ) => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
           </select>

@@ -20,11 +20,11 @@ interface NewRecipeClientProps {
 export function NewRecipeClient({ ingredients }: NewRecipeClientProps) {
   const router = useRouter()
   const [rows, setRows] = useState<{ id: string; ingredientId: string; quantity: string }[]>([
-    { id: Math.random().toString(), ingredientId: '', quantity: '' }
+    { id: crypto.randomUUID(), ingredientId: '', quantity: '' }
   ])
 
   const addRow = () => {
-    setRows([...rows, { id: Math.random().toString(), ingredientId: '', quantity: '' }])
+    setRows([...rows, { id: crypto.randomUUID(), ingredientId: '', quantity: '' }])
   }
 
   const removeRow = (id: string) => {
@@ -68,7 +68,7 @@ export function NewRecipeClient({ ingredients }: NewRecipeClientProps) {
           </h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {rows.map((row, index) => {
+            {rows.map((row, _index) => {
               const selectedIng = ingredients.find(i => i.id === row.ingredientId)
               return (
                 <div key={row.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

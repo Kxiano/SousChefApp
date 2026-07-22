@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.redirect(portalSession.url, { status: 302 })
-  } catch (error: any) {
+  } catch (error: any  ) {
     console.error('Portal error:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   }

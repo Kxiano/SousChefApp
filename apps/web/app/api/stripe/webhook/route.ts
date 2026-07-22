@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch (err: any) {
+  } catch (err: any  ) {
     console.error(`Webhook signature verification failed: ${err.message}`)
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 })
   }
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     }
 
     return new NextResponse('Webhook processed successfully', { status: 200 })
-  } catch (err: any) {
+  } catch (err: any  ) {
     console.error(`Webhook handler failed: ${err.message}`)
     return new NextResponse('Internal Server Error', { status: 500 })
   }

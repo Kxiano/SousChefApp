@@ -33,7 +33,7 @@ export function ChatUI({ initialMessages }: { initialMessages: any[] }) {
         {messages.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-muted)' }}>
             <Bot size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
-            <p>Hi! I'm your AI Sous Chef.</p>
+            <p>Hi! I&apos;m your AI Sous Chef.</p>
             <p style={{ fontSize: '14px', marginTop: '8px' }}>Ask me about inventory, recipes, or tell me to log a sale.</p>
           </div>
         ) : (
