@@ -1,5 +1,12 @@
-// Since we have a root middleware that redirects to the locale-prefixed path,
-// this layout is required by Next.js but will only serve to pass children through.
+import { Geist } from 'next/font/google'
+import './globals.css'
+
+const geist = Geist({ subsets: ['latin'] })
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <html lang="en" className="h-full">
+      <body className={`${geist.className} h-full antialiased`}>{children}</body>
+    </html>
+  )
 }

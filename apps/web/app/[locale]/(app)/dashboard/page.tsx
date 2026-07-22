@@ -14,8 +14,20 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
+  const profile = await prisma.profile.upsert({
+    where: { id: user.id },
+    update: {},
+    create: {
+      id: user.id,
+      role: 'owner',
+      displayName: user.user_metadata.full_name ?? user.email?.split('@')[0] ?? null,
+      restaurant: {
+        create: {
+          name: user.user_metadata.restaurant_name ?? 'My Kitchen',
+        },
+      },
+    },
+  })
 
   const restaurantId = profile.restaurantId
 
