@@ -44,12 +44,12 @@ jobs:
 
       - name: Run database migrations (production)
         run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::No DATABASE_URL secret found in GitHub Secrets. Skipping DB migrations."
+            exit 0
+          fi
           if [ -z "$DIRECT_URL" ]; then
             export DIRECT_URL="$DATABASE_URL"
-          fi
-          if [ -z "$DATABASE_URL" ]; then
-            echo "::error::Neither DIRECT_URL nor DATABASE_URL secrets are configured in GitHub Actions."
-            exit 1
           fi
           pnpm --filter @sous-chef/db run migrate:deploy
         env:

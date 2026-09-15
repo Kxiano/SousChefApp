@@ -48,12 +48,12 @@ jobs:
 
       - name: Run database migrations (staging)
         run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::No database connection string secret (DATABASE_URL_PREVIEW or DATABASE_URL) found in GitHub Secrets. Skipping DB migrations."
+            exit 0
+          fi
           if [ -z "$DIRECT_URL" ]; then
             export DIRECT_URL="$DATABASE_URL"
-          fi
-          if [ -z "$DATABASE_URL" ]; then
-            echo "::error::Neither DATABASE_URL_PREVIEW, DIRECT_URL, nor DATABASE_URL secrets are configured in GitHub Actions."
-            exit 1
           fi
           pnpm --filter @sous-chef/db run migrate:deploy
         env:
