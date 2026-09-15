@@ -46,6 +46,7 @@ jobs:
         run: pnpm --filter @sous-chef/db run migrate:deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
