@@ -55,6 +55,10 @@ jobs:
           if [ -z "$DIRECT_URL" ]; then
             export DIRECT_URL="$DATABASE_URL"
           fi
+          if [ ! -d "packages/db/prisma/migrations" ]; then
+            echo "No migrations folder found in packages/db/prisma. Skipping DB migrations."
+            exit 0
+          fi
           pnpm --filter @sous-chef/db run migrate:deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_PREVIEW || secrets.DATABASE_URL }}
