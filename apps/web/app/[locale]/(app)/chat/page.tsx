@@ -7,6 +7,7 @@ import { ChatUI } from './chat-ui'
 export const metadata: Metadata = { title: 'AI Chef' }
 
 export default async function ChatPage() {
+  console.log('ChatPage is rendering...');
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')

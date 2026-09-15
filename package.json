@@ -14,5 +14,10 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {
+    "@ai-sdk/google": "^4.0.23",
+    "@ai-sdk/react": "^4.0.39",
+    "ai": "^7.0.36"
+  }
 }

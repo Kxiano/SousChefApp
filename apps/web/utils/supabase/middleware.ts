@@ -56,14 +56,14 @@ export async function updateSession(request: NextRequest, customResponse?: NextR
       .from('profiles')
       .select('restaurant_id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (profile) {
       const { data: restaurant } = await supabase
         .from('restaurants')
         .select('subscription_status, grace_period_ends_at')
         .eq('id', profile.restaurant_id)
-        .single()
+        .maybeSingle()
 
       if (restaurant) {
         const status = restaurant.subscription_status

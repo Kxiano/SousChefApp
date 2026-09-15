@@ -13,6 +13,9 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
+    "@sous-chef/db#build": {
+      "outputs": []
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
