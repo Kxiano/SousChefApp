@@ -55,8 +55,8 @@ jobs:
           if [ -z "$DIRECT_URL" ]; then
             export DIRECT_URL="$DATABASE_URL"
           fi
-          if [ ! -d "packages/db/prisma/migrations" ]; then
-            echo "No migrations folder found in packages/db/prisma. Skipping DB migrations."
+          if [ ! -d "packages/db/prisma/migrations" ] || [ -z "$(ls -A packages/db/prisma/migrations 2>/dev/null)" ]; then
+            echo "No migration files found in packages/db/prisma/migrations. Skipping DB migrations."
             exit 0
           fi
           pnpm --filter @sous-chef/db run migrate:deploy
