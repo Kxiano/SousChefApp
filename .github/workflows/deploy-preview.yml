@@ -47,10 +47,18 @@ jobs:
         run: pnpm --filter @sous-chef/db exec prisma generate
 
       - name: Run database migrations (staging)
-        run: pnpm --filter @sous-chef/db run migrate:deploy
+        run: |
+          if [ -z "$DIRECT_URL" ]; then
+            export DIRECT_URL="$DATABASE_URL"
+          fi
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Neither DATABASE_URL_PREVIEW, DIRECT_URL, nor DATABASE_URL secrets are configured in GitHub Actions."
+            exit 1
+          fi
+          pnpm --filter @sous-chef/db run migrate:deploy
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PREVIEW }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL_PREVIEW || secrets.DATABASE_URL_PREVIEW }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PREVIEW || secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL_PREVIEW || secrets.DIRECT_URL }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
