@@ -24,6 +24,9 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     environment: preview
+    permissions:
+      pull-requests: write
+      issues: write
     outputs:
       preview-url: ${{ steps.deploy.outputs.preview-url }}
 
