@@ -1,41 +1,39 @@
-import { AlertTriangle } from 'lucide-react'
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import { Lock } from 'lucide-react'
+import { Link } from '@/lib/navigation'
+import { AuthShell } from '@/components/auth-shell'
+import { buttonClass } from '@/components/ui/button'
 
-export const metadata: Metadata = { title: 'Billing Locked' }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Billing')
+  return { title: t('title') }
+}
 
-export default function BillingLockedPage() {
+const REASONS = ['trial_ended', 'payment_failed', 'canceled'] as const
+
+export default async function BillingLockedPage({ searchParams }: { searchParams: Promise<{ reason?: string }> }) {
+  const { reason } = await searchParams
+  const t = await getTranslations('Billing')
+  const why = (REASONS as readonly string[]).includes(reason ?? '') ? (reason as (typeof REASONS)[number]) : null
+
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[var(--color-surface)] p-6">
-      <div className="flex max-w-md flex-col items-center text-center">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
-          <AlertTriangle className="h-10 w-10 text-red-500" />
-        </div>
-        
-        <h1 className="mb-2 text-3xl font-bold text-[var(--color-text-primary)]">
-          Account Locked
-        </h1>
-        
-        <p className="mb-8 text-[var(--color-text-secondary)]">
-          Your kitchen&apos;s subscription has expired or a payment failed. Please update your billing information to regain access to Sous Chef.
-        </p>
+    <AuthShell>
+      <span className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-paprika-soft">
+        <Lock size={22} className="text-paprika" aria-hidden />
+      </span>
+      <h1 className="mt-5 font-display text-[32px] font-extrabold leading-[1.08] tracking-[-0.02em]">
+        {why ? t(`locked.${why}.heading`) : t('heading')}
+      </h1>
+      <p className="mt-3 text-[15.5px] leading-relaxed text-muted">{why ? t(`locked.${why}.body`) : t('body')}</p>
+      <p className="mt-3 text-[14px] font-medium text-body">{t('locked.data_safe')}</p>
 
-        <form action="/api/stripe/portal" method="POST" className="w-full">
-          <button 
-            type="submit"
-            className="flex w-full items-center justify-center rounded-lg bg-[var(--color-brand-500)] px-6 py-3 font-semibold text-black transition-colors hover:bg-[var(--color-brand-600)]"
-          >
-            Manage Billing & Subscribe
-          </button>
-        </form>
-
-        <Link 
-          href="/auth/signout" 
-          className="mt-6 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-        >
-          Sign out
-        </Link>
-      </div>
-    </div>
+      <Link href="/billing" className={buttonClass('primary', 'lg', 'mt-7 w-full font-bold')}>
+        {why === 'trial_ended' ? t('locked.choose_plan') : t('manage')}
+      </Link>
+      <form action="/auth/signout" method="POST" className="mt-3">
+        <button type="submit" className={buttonClass('ghost', 'lg', 'w-full')}>{t('sign_out')}</button>
+      </form>
+    </AuthShell>
   )
 }

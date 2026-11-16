@@ -1,32 +1,28 @@
 import { type NextRequest } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
+import { routing } from './lib/routing'
 import { updateSession } from './utils/supabase/middleware'
 
-const intlMiddleware = createMiddleware({
-  // A list of all locales that are supported
-  locales: ['en', 'pt-BR'],
- 
-  // Used when no locale matches
-  defaultLocale: 'en'
-})
+const intlMiddleware = createMiddleware(routing)
 
 export async function proxy(request: NextRequest) {
-  // Run next-intl middleware first to get locale-based response
   const response = intlMiddleware(request)
-  
-  // Then run Supabase session updates on top of that response
-  return await updateSession(request, response)
+
+  // next-intl is adding a missing locale prefix (e.g. "/" -> "/en"); the
+  // redirected request comes back through here and is checked then.
+  if (response.headers.has('location')) return response
+
+  return updateSession(request, response)
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api (API routes - exclude from locale prefixing)
-     * - auth/signout (specific endpoint)
+     * Match all request paths except:
+     * - _next/static, _next/image (build output and image optimisation)
+     * - favicon.ico and other static images
+     * - api (API routes, no locale prefix)
+     * - auth/signout (route handler outside the locale folder)
      */
     '/((?!_next/static|_next/image|favicon.ico|api|auth/signout|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],

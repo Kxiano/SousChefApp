@@ -3,14 +3,581 @@
     "dashboard": "Dashboard",
     "inventory": "Inventory",
     "recipes": "Recipes",
-    "calculator": "Calculator",
-    "portions": "Portions",
-    "purchases": "Purchases",
+    "calculator": "Prep calculator",
+    "portions": "Ready portions",
+    "purchases": "Purchase orders",
     "shifts": "Shifts",
-    "best_sellers": "Best Sellers",
+    "best_sellers": "Best sellers",
     "notes": "Notes",
-    "ai_chef": "AI Chef",
-    "manage_billing": "Manage Billing",
-    "sign_out": "Sign out"
+    "ai_chef": "AI Sous Chef",
+    "manage_billing": "Billing",
+    "sign_out": "Sign out",
+    "team": "Team",
+    "group_service": "Service",
+    "group_kitchen": "Kitchen",
+    "group_team": "Team",
+    "owner": "Owner",
+    "staff": "Staff",
+    "trial_days_left": "{days, plural, one {Free trial · # day left} other {Free trial · # days left}}",
+    "trial_cta": "Subscribe during your trial and save up to 35%",
+    "open_menu": "Open menu",
+    "close_menu": "Close menu",
+    "app": "App navigation"
+  },
+  "Common": {
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "Team": {
+    "title": "Team",
+    "subtitle": "{count, plural, one {# member} other {# members}} in this kitchen",
+    "invite": {
+      "heading": "Invite a teammate",
+      "email_label": "Email (optional)",
+      "email_placeholder": "cook@example.com",
+      "submit": "Create invite link",
+      "help": "Each link works once and expires after {days} days. Add an email to send it, or copy the link and share it yourself."
+    },
+    "created": {
+      "link": "Invite link created. Copy it below and send it to your teammate.",
+      "sent": "Invite sent by email. You can also copy the link below.",
+      "simulated": "Invite link created. Email sending is not configured, so copy the link below and share it.",
+      "failed": "The invite link was created, but the email could not be sent. Copy the link below and share it yourself."
+    },
+    "pending": {
+      "heading": "Pending invites",
+      "empty": "No pending invites.",
+      "link_label": "Invite link",
+      "revoke": "Revoke",
+      "meta": "Created {created} · expires {expires}"
+    },
+    "members": {
+      "heading": "Members",
+      "you": "you",
+      "unnamed": "Unnamed member",
+      "owner": "Owner",
+      "staff": "Staff",
+      "owner_only": "Only the kitchen owner can invite new teammates."
+    },
+    "errors": {
+      "not_owner": "Only the kitchen owner can manage invites.",
+      "invalid_email": "That email address does not look right.",
+      "missing_name": "The kitchen needs a name."
+    },
+    "kitchen": {
+      "heading": "Kitchen",
+      "name_label": "Kitchen name",
+      "save": "Save name",
+      "renamed": "Kitchen name updated."
+    }
+  },
+  "Auth": {
+    "title": "Log in",
+    "email": "Email",
+    "password": "Password",
+    "log_in": "Log in",
+    "sign_up": "Sign up",
+    "errors": {
+      "invalid_credentials": "Wrong email or password.",
+      "email_not_confirmed": "Confirm your email first. Check your inbox for the link.",
+      "user_already_exists": "An account with this email already exists. Log in instead.",
+      "weak_password": "Use a password with at least 6 characters.",
+      "signup_failed": "We could not create your account. Try again in a moment."
+    },
+    "messages": {
+      "check_email": "Account created. Check your email to confirm it, then log in."
+    },
+    "heading": "Welcome back, Chef.",
+    "subheading": "Log in to your kitchen, or create an account to start your 30-day free trial.",
+    "password_hint": "At least 6 characters.",
+    "trial_note": "30 days free. No card needed to start."
+  },
+  "BestSellers": {
+    "title": "Best sellers",
+    "subtitle": "Sales ranking by recipe",
+    "periods": {
+      "today": "Today",
+      "week": "Last 7 days",
+      "month": "Last 30 days",
+      "all": "All time"
+    },
+    "empty": "No sales data for this period. Log some sales below.",
+    "sold_count": "{count, plural, other {{formatted} sold}}",
+    "manual": {
+      "heading": "Log manual sale",
+      "recipe": "Recipe",
+      "select_recipe": "Select a recipe…",
+      "quantity": "Qty sold",
+      "submit": "Log"
+    }
+  },
+  "Billing": {
+    "title": "Billing locked",
+    "heading": "Account locked",
+    "body": "Your kitchen's subscription has expired or a payment failed. Please update your billing information to regain access to Sous Chef.",
+    "manage": "Manage billing",
+    "sign_out": "Sign out",
+    "page": {
+      "title": "Billing",
+      "subtitle": "Your Sous Chef subscription",
+      "plan_heading": "Plan",
+      "plan_name": "Sous Chef for {restaurant}",
+      "price": "{amount} per {interval, select, month {month} year {year} week {week} day {day} other {period}}",
+      "status": {
+        "active": "Active",
+        "trialing": "Free trial",
+        "past_due": "Payment failed",
+        "canceled": "Canceled",
+        "incomplete": "Incomplete",
+        "unpaid": "Unpaid"
+      },
+      "trial_notice": "You are on the free trial. Subscribe any time to keep your kitchen running without interruption.",
+      "past_due_notice": "Your last payment failed. Update your payment details before {date} to keep access.",
+      "canceled_notice": "Your subscription is canceled. Subscribe again to unlock the app.",
+      "subscribe": "Subscribe",
+      "manage": "Manage billing",
+      "checkout_success": "Thanks! Your subscription is being set up and will show here in a moment.",
+      "checkout_canceled": "Checkout was canceled. Nothing was charged.",
+      "not_configured": "Online payments are not set up for this app yet.",
+      "owner_only": "Only the kitchen owner can manage billing.",
+      "errors": {
+        "not_owner": "Only the kitchen owner can manage billing.",
+        "not_configured": "Online payments are not set up for this app yet.",
+        "already_subscribed": "This kitchen already has a subscription. Use \"Manage billing\" to change it.",
+        "checkout_failed": "We could not start checkout. Try again in a moment.",
+        "portal_failed": "We could not open the billing portal. Try again in a moment.",
+        "plan_unavailable": "That plan is not available right now."
+      },
+      "trial_days_left": "{days, plural, one {Free trial · # day left} other {Free trial · # days left}}",
+      "trial_offer_line": "Subscribe before {date} to keep the trial offer: up to 35% off.",
+      "free_days_note": "Your free days stay free: billing starts when the trial ends. Cancel before then and you pay nothing.",
+      "trial_ended_notice": "Your free trial has ended. Choose a plan to unlock the kitchen.",
+      "per_month": "/mo",
+      "best_value": "Best value · {percent}% off",
+      "trial_offer": "Trial offer · {percent}% off",
+      "plans": {
+        "monthly": {
+          "name": "Monthly",
+          "tagline": "Flexible. Cancel any time.",
+          "billed": "Billed {amount} every month",
+          "first_period": "{amount} for your first month"
+        },
+        "semiannual": {
+          "name": "6 months",
+          "tagline": "For a full season of service.",
+          "billed": "Billed {amount} every 6 months",
+          "first_period": "{amount} for your first 6 months"
+        },
+        "annual": {
+          "name": "1 year",
+          "tagline": "The lowest price for your kitchen.",
+          "billed": "Billed {amount} every year",
+          "first_period": "{amount} for your first year"
+        }
+      },
+      "features": {
+        "everything": "Every feature, every teammate, AI Sous Chef included",
+        "discount": "{percent}% off your first {plan, select, annual {year} other {6 months}}",
+        "flexible": "No commitment beyond the current {plan, select, monthly {month} annual {year} other {6 months}}",
+        "then": "Then {amount} {plan, select, monthly {a month} annual {a year} other {every 6 months}}"
+      },
+      "claim": "Claim {percent}% off",
+      "choose": {
+        "monthly": "Choose monthly",
+        "semiannual": "Choose 6 months",
+        "annual": "Choose 1 year"
+      },
+      "secure_note": "Payments are handled securely by Stripe. Cancel any time from “Manage billing”."
+    },
+    "locked": {
+      "trial_ended": {
+        "heading": "Your free trial has ended.",
+        "body": "Thanks for cooking with Sous Chef for 30 days. Choose a plan to pick up exactly where you left off."
+      },
+      "payment_failed": {
+        "heading": "We couldn’t take your last payment.",
+        "body": "Update your payment details to unlock the kitchen again."
+      },
+      "canceled": {
+        "heading": "Your subscription is canceled.",
+        "body": "Subscribe again whenever you’re ready to unlock the kitchen."
+      },
+      "data_safe": "Your recipes, stock and team are all saved.",
+      "choose_plan": "Choose a plan"
+    }
+  },
+  "Calculator": {
+    "title": "Prep calculator",
+    "subtitle": "See exactly what you need to prepare a recipe",
+    "recipe_label": "Recipe",
+    "select_recipe": "Select a recipe…",
+    "portions_label": "Portions",
+    "calculate": "Calculate",
+    "result_heading": "{recipe} × {count, plural, one {# portion} other {# portions}}",
+    "estimated_cost": "Est. cost: {cost}",
+    "shortage": "Some ingredients are below the required quantity.",
+    "create_po": "Create a purchase order →",
+    "col_ingredient": "Ingredient",
+    "col_required": "Required",
+    "col_in_stock": "In stock",
+    "col_cost": "Cost",
+    "col_status": "Status",
+    "short": "Short {amount} {unit}",
+    "ok": "OK",
+    "total_cost": "Total estimated cost",
+    "mark_prepared": "Mark {count, plural, one {# portion} other {# portions}} as prepared",
+    "mark_prepared_help": "This will deduct ingredients from stock and add to ready portions.",
+    "empty": "Select a recipe and portions above to calculate required ingredients.",
+    "errors": {
+      "insufficient_stock": "Stock changed since this was calculated and there is no longer enough. Nothing was deducted."
+    },
+    "ticket_label": "Prep calculator",
+    "per_plate": "{cost} / plate"
+  },
+  "Chat": {
+    "title": "AI Chef",
+    "heading": "AI Sous Chef",
+    "subtitle": "Ask me about inventory, recipes, or tell me to log a sale.",
+    "empty_greeting": "Hi! I'm your AI Sous Chef.",
+    "empty_hint": "Ask me about inventory, recipes, or tell me to log a sale.",
+    "placeholder": "Ask your AI Sous Chef…",
+    "input_label": "Message to the AI Chef",
+    "send": "Send message",
+    "thinking": "The AI Chef is thinking",
+    "send_error": "Sorry, I could not send that message. Please try again."
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "heading": "Kitchen overview",
+    "stats": {
+      "low_stock": "Low stock alerts",
+      "sold_today": "Sold today",
+      "draft_orders": "Draft purchase orders",
+      "urgent_notes": "Urgent notes"
+    },
+    "shifts": {
+      "heading": "Upcoming shifts",
+      "view_all": "View all →",
+      "empty": "No upcoming shifts scheduled.",
+      "unnamed": "Team member"
+    },
+    "greeting": {
+      "morning": "Good morning, {name}.",
+      "afternoon": "Good afternoon, {name}.",
+      "evening": "Good evening, {name}.",
+      "morning_generic": "Good morning.",
+      "afternoon_generic": "Good afternoon.",
+      "evening_generic": "Good evening."
+    },
+    "actions": {
+      "new_order": "New purchase order",
+      "plan_prep": "Plan today's prep"
+    },
+    "hints": {
+      "low_stock": "ingredients to reorder",
+      "sold_today": "portions since midnight",
+      "draft_orders": "waiting to be sent",
+      "urgent_notes": "for the whole team"
+    },
+    "reorder": {
+      "heading": "Reorder before service",
+      "create": "Create order",
+      "empty": "Everything is above its minimum.",
+      "more": "{count, plural, one {# more ingredient} other {# more ingredients}} below minimum"
+    },
+    "urgent": {
+      "eyebrow": "Urgent note",
+      "more": "+{count}",
+      "someone": "Someone",
+      "view_all": "All notes",
+      "empty": "No urgent notes. Allergies, VIP tables or broken equipment go here.",
+      "post": "Post a note"
+    }
+  },
+  "Ingredients": {
+    "title": "Inventory",
+    "heading": "Ingredient inventory",
+    "subtitle": "{count, plural, one {# item tracked} other {# items tracked}}",
+    "form": {
+      "name": "Name",
+      "name_placeholder": "e.g. Tomatoes",
+      "unit": "Unit",
+      "quantity": "Quantity",
+      "low_stock_at": "Low stock at",
+      "cost_per_unit": "Cost/unit (€)",
+      "add": "Add ingredient"
+    },
+    "empty": "No ingredients yet. Add your first ingredient above.",
+    "table": {
+      "name": "Name",
+      "unit": "Unit",
+      "stock": "Stock",
+      "low_stock": "Low stock",
+      "cost_per_unit": "Cost/unit"
+    },
+    "delete": "Delete",
+    "low_count": "{count, plural, one {# below minimum} other {# below minimum}}",
+    "low_badge": "Low"
+  },
+  "Invite": {
+    "title": "Join a kitchen",
+    "missing_token": "Invalid or missing invite token.",
+    "invalid": "This invite link is invalid or has expired.",
+    "join": "Join {restaurant}",
+    "logged_in_as": "You are logged in as {email}. Do you want to join this kitchen team?",
+    "accept": "Accept invite",
+    "log_in_to_accept": "Please log in to accept this invite.",
+    "log_in_or_sign_up": "Log in or sign up",
+    "home": "Go to the home page"
+  },
+  "Landing": {
+    "meta_title": "Sous Chef · Kitchen management for restaurants",
+    "meta_description": "Stock, recipes, prep and the team in one place. Know what to prep, what to order and what each plate costs. 30 days free.",
+    "nav_label": "Main",
+    "nav_features": "Features",
+    "nav_pricing": "Pricing",
+    "nav_login": "Log in",
+    "nav_cta": "Start free trial",
+    "hero_badge": "30 days free · no card needed",
+    "hero_title": "Kitchen management for restaurants that cook from scratch.",
+    "hero_body": "Stock, recipes, prep and the team in one place. Sous Chef tells you what to prep, what to order and what each plate costs, before service starts.",
+    "hero_cta": "Start your 30-day trial",
+    "hero_secondary": "See how it works",
+    "hero_languages": "In English and Português (Brasil).",
+    "demo_label": "Prep calculator",
+    "demo_recipe": "Ragù alla bolognese",
+    "demo_cost": "{cost} / plate",
+    "demo_col_ingredient": "Ingredient",
+    "demo_col_need": "Need",
+    "demo_col_stock": "In stock",
+    "demo_col_status": "Status",
+    "demo_items": {
+      "beef": "Beef mince",
+      "tomatoes": "San marzano tomatoes",
+      "pancetta": "Pancetta",
+      "soffritto": "Soffritto"
+    },
+    "demo_ready": "Ready",
+    "demo_short": "Short {amount}",
+    "demo_order": "Order 0.70 kg pancetta",
+    "demo_prep": "Prep 22 plates now",
+    "features_title": "Every station, from delivery to the pass.",
+    "f1_card_title": "Low stock",
+    "f1_card_count": "3 items",
+    "f1_card_basil": "Basil",
+    "f1_title": "Stock that orders itself",
+    "f1_body": "Set a minimum per ingredient. Anything below it lands in a purchase order, ready to send.",
+    "f2_card_cost": "Cost per plate",
+    "f2_card_yield": "Yield",
+    "f2_card_portions": "{count} portions",
+    "f2_title": "Recipes with real costs",
+    "f2_body": "Build a recipe from your own ingredients and see the cost of every plate as prices change.",
+    "f3_card_user": "We sold 18 lasagne tonight",
+    "f3_card_reply": "Logged 18 sold. 6 portions left for tomorrow.",
+    "f3_title": "An AI sous chef on the line",
+    "f3_body": "Ask what to prep, log sales and discards, or check a shift, in plain words, in your language.",
+    "pricing_title": "One plan for the whole kitchen.",
+    "pricing_body": "Every feature and every teammate for {price} a month. Try it free for 30 days; subscribe during the trial and pay as little as {annual} a month for your first year ({percent}% off)."
+  },
+  "Notes": {
+    "title": "Note board",
+    "subtitle": "{count, plural, =0 {No notes} one {# note} other {# notes}}",
+    "note_label": "Note",
+    "placeholder": "Leave a note for your team…",
+    "mark_urgent": "Mark as urgent",
+    "post": "Post note",
+    "empty": "No notes yet. Leave one for your team above.",
+    "team_member": "Team member",
+    "urgent": "URGENT",
+    "delete": "Delete note"
+  },
+  "Portions": {
+    "title": "Ready portions",
+    "subtitle": "Track prepared stock and log sales",
+    "prepared_success": "Portions prepared and ingredients deducted from stock.",
+    "errors": {
+      "insufficient_stock": "Not enough ingredients in stock to prepare these portions. Nothing was deducted.",
+      "not_enough_portions": "There are not enough ready portions to record that.",
+      "recipe_not_found": "That recipe no longer exists."
+    },
+    "prepare": {
+      "heading": "Mark as prepared",
+      "recipe": "Recipe",
+      "select_recipe": "Select a recipe…",
+      "portions": "Portions prepared",
+      "submit": "Prepare"
+    },
+    "stock": {
+      "heading": "Current stock",
+      "empty": "No prepared portions yet. Use the form above to mark a recipe as prepared.",
+      "recipe": "Recipe",
+      "ready": "Ready",
+      "sold_today": "Sold today",
+      "discarded_today": "Discarded today",
+      "log_sale": "Log sale",
+      "sold": "Sold",
+      "discard": "Discard",
+      "qty_label": "Quantity"
+    }
+  },
+  "PurchaseOrders": {
+    "title": "Purchase orders",
+    "subtitle": "{count, plural, one {# order} other {# orders}} total",
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "received": "Received"
+    },
+    "create": {
+      "heading": "Create new order",
+      "below_threshold": "{count, plural, one {# ingredient is} other {# ingredients are}} below threshold and pre-filled.",
+      "ingredient_stock": "{name} ({unit}) — stock: {stock}",
+      "notes": "Notes (optional)",
+      "notes_placeholder": "Supplier, urgency…",
+      "submit": "Create draft order",
+      "low": "Low",
+      "in_stock": "In stock: {stock} {unit}",
+      "order_qty_label": "Quantity to order of {name}"
+    },
+    "orders": {
+      "heading": "Orders",
+      "empty": "No purchase orders yet. Create one above.",
+      "mark_sent": "Mark sent",
+      "mark_received": "Mark received",
+      "delete": "Delete",
+      "received_qty": "(received: {quantity})"
+    }
+  },
+  "Recipes": {
+    "meta_title": "Recipes",
+    "title": "Recipe book",
+    "count": "{count, plural, one {# recipe} other {# recipes}}",
+    "new_button": "New recipe",
+    "empty": "No recipes yet. Create your first recipe to get started.",
+    "card_meta": "{ingredients, plural, one {# ingredient} other {# ingredients}} · Yield: {portions, plural, one {# portion} other {# portions}}",
+    "back": "Back to recipes",
+    "new": {
+      "title": "New recipe",
+      "subtitle": "Create a new recipe and its ingredient requirements"
+    },
+    "detail": {
+      "meta_title": "Recipe",
+      "yields": "Yields {count, plural, one {# portion} other {# portions}}",
+      "delete": "Delete",
+      "ingredients_heading": "Ingredients (per portion)",
+      "col_ingredient": "Ingredient",
+      "col_qty": "Qty/portion",
+      "col_cost": "Cost/portion",
+      "total_cost": "Total cost per portion",
+      "calculate": "Calculate ingredient needs",
+      "edit": "Edit",
+      "delete_confirm": "Delete \"{name}\"? Its sales history will be deleted too. This cannot be undone."
+    },
+    "edit": {
+      "title": "Edit recipe",
+      "subtitle": "Update the recipe and its ingredient requirements"
+    },
+    "form": {
+      "name_label": "Recipe name",
+      "name_placeholder": "e.g. Tomato soup",
+      "yield_label": "Yield (portions)",
+      "notes_label": "Instructions or notes (optional)",
+      "notes_placeholder": "Recipe instructions, preparation tips...",
+      "ingredients_heading": "Ingredients required",
+      "select_ingredient": "Select ingredient…",
+      "qty_placeholder": "Qty/portion",
+      "remove_ingredient": "Remove ingredient",
+      "add_ingredient": "Add ingredient",
+      "save_new": "Save recipe",
+      "save_edit": "Save changes",
+      "cancel": "Cancel",
+      "errors": {
+        "missing_name": "Give the recipe a name.",
+        "no_ingredients": "Add at least one ingredient with a quantity."
+      }
+    },
+    "no_cost": "No prices yet",
+    "cost_badge": "{cost} per portion",
+    "notes_heading": "Method and notes"
+  },
+  "Shifts": {
+    "title": "Shift schedule",
+    "subtitle": "{count, plural, =0 {No upcoming shifts} one {# upcoming shift} other {# upcoming shifts}}",
+    "add_heading": "Add shift",
+    "team_member": "Team member",
+    "start": "Start",
+    "end": "End",
+    "role_label": "Role label",
+    "role_placeholder": "e.g. Line cook",
+    "add": "+ Add",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "empty": "No shifts scheduled yet. Add your first shift above.",
+    "unnamed_member": "User {id}",
+    "delete": "Delete shift"
+  },
+  "Onboarding": {
+    "title": "Set up your kitchen",
+    "heading": "Set up your kitchen",
+    "subheading": "One quick step before you start.",
+    "restaurant_label": "Restaurant or kitchen name",
+    "restaurant_placeholder": "e.g. Casa Lima",
+    "name_label": "Your name",
+    "language_label": "Language",
+    "submit": "Create kitchen",
+    "invite_hint": "Joining an existing team? Open the invite link you received instead.",
+    "errors": {
+      "missing_name": "Give your kitchen a name."
+    },
+    "trial_badge": "Your 30-day free trial starts today"
+  },
+  "TrialOffer": {
+    "chef": "Chef",
+    "day": "Day {day} of {total}",
+    "close": "Close",
+    "title": "Halfway through your trial, {name}. {restaurant} is taking shape.",
+    "progress": "So far you have costed <strong>{recipes, plural, one {# recipe} other {# recipes}}</strong>, tracked <strong>{portions, plural, one {# portion} other {# portions}}</strong> and brought <strong>{teammates, plural, one {# person} other {# people}}</strong> into the kitchen.",
+    "progress_offer": "Subscribe before your trial ends and keep it all at a trial-only price.",
+    "choose_plan": "Choose your plan",
+    "best_value": "Best value · {percent}% off",
+    "percent_off": "{percent}% off",
+    "per_month": "/mo",
+    "first_period_total": "{amount} today",
+    "plans": {
+      "annual": {
+        "name": "1 year",
+        "detail": "{percent}% off your first year · then {regular}/year"
+      },
+      "semiannual": {
+        "name": "6 months",
+        "detail": "{percent}% off your first 6 months · then {regular} every 6 months"
+      }
+    },
+    "cta": {
+      "annual": "Claim {percent}% off my first year",
+      "semiannual": "Claim {percent}% off my first 6 months"
+    },
+    "no_charge": "Nothing is charged until {date}. Cancel before then and you pay nothing.",
+    "not_now": "Not now, continue my trial",
+    "compare": "Compare all plans",
+    "pros_title": "If you subscribe during your trial",
+    "pro_discount": "The trial discount, locked in for your first {period}",
+    "pro_free_days": "{days, plural, one {Your last free day stays free} other {Your remaining # free days stay free}}",
+    "pro_continuity": "No interruption on day 30: recipes, stock and team carry on",
+    "period": {
+      "annual": "year",
+      "semiannual": "6 months"
+    },
+    "cons_title": "If you wait",
+    "con_offer_ends": "The offer ends with your trial on {date}",
+    "con_pause": "The kitchen pauses until you subscribe (nothing is deleted)",
+    "con_monthly": "Monthly stays open any time at {price}/month",
+    "questions": "Questions before you decide? Reply to any Sous Chef email and a person will answer."
+  },
+  "AuthShell": {
+    "tagline": "Before service, you’ll know what to prep, what to order and what each plate costs.",
+    "ticket_title": "PREP · FRI",
+    "ticket_trays": "×{count} trays",
+    "ticket_order": "ORDER"
   }
 }

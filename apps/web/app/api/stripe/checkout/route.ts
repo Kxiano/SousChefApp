@@ -1,61 +1,73 @@
+import { NextResponse, type NextRequest } from 'next/server'
+import { prisma } from '@sous-chef/db'
 import { stripe } from '@/utils/stripe'
 import { createClient } from '@/utils/supabase/server'
-import { prisma } from '@sous-chef/db'
-import { NextResponse } from 'next/server'
+import { getTrialState, isBillingConfigured, isPlanId, planCouponId, planPriceId } from '@/lib/billing'
+import { isLocale, routing } from '@/lib/routing'
 
-export async function POST(req: Request) {
+const TWO_DAYS = 2 * 24 * 60 * 60 * 1000
+
+// Started from a plain form POST (billing page or the mid-trial offer); every
+// outcome is a 303 redirect so the browser follows it with GET.
+export async function POST(request: NextRequest) {
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+  const locale = isLocale(cookieLocale) ? cookieLocale : routing.defaultLocale
+  const billingUrl = (search = '') => new URL(`/${locale}/billing${search}`, request.url)
+  const back = (search: string) => NextResponse.redirect(billingUrl(search), { status: 303 })
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.redirect(new URL(`/${locale}/login`, request.url), { status: 303 })
+
+  const profile = await prisma.profile.findUnique({ where: { id: user.id }, include: { restaurant: true } })
+  if (!profile || profile.role !== 'owner') return back('?error=not_owner')
+  if (!isBillingConfigured()) return back('?error=not_configured')
+
+  const form = await request.formData().catch(() => null)
+  const requested = form?.get('plan')
+  const plan = isPlanId(requested) ? requested : 'monthly'
+  const priceId = planPriceId(plan)
+  if (!priceId) return back('?error=plan_unavailable')
+
+  const { restaurant } = profile
+  // Already subscribed: changes happen in the customer portal, not a second checkout.
+  if (restaurant.stripeSubscriptionId && restaurant.stripeCustomerId
+    && ['active', 'trialing', 'past_due'].includes(restaurant.subscriptionStatus ?? '')) {
+    return back('?error=already_subscribed')
+  }
+
+  // Acting on the offer counts as having seen it.
+  if (!restaurant.trialReminderSeenAt) {
+    await prisma.restaurant.update({ where: { id: restaurant.id }, data: { trialReminderSeenAt: new Date() } })
+  }
+
+  const trial = getTrialState(restaurant)
+  const trialActive = trial.onFreeTrial && !trial.ended
+  // The trial offer only applies while the free trial is still running.
+  const couponId = trialActive ? planCouponId(plan) : null
+  // Keep the remaining free days: billing starts when the trial would have ended.
+  // (Stripe needs a trial end at least 48 hours away.)
+  const trialEnd = trialActive && trial.endsAt.getTime() - Date.now() > TWO_DAYS
+    ? Math.floor(trial.endsAt.getTime() / 1000)
+    : undefined
+
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
-    const profile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      include: { restaurant: true },
-    })
-
-    if (!profile || profile.role !== 'owner') {
-      return new NextResponse('Forbidden: Only owners can manage billing', { status: 403 })
-    }
-
-    const { priceId } = await req.json()
-    if (!priceId) {
-      return new NextResponse('Price ID is required', { status: 400 })
-    }
-
-    // Prepare redirect URLs
-    const referer = req.headers.get('referer')
-    const returnUrl = referer ? new URL(referer).origin : 'http://localhost:3000'
-
-    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      billing_address_collection: 'required',
-      customer: profile.restaurant.stripeCustomerId || undefined,
-      customer_email: profile.restaurant.stripeCustomerId ? undefined : user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        }
-      ],
       mode: 'subscription',
-      subscription_data: {
-        metadata: {
-          restaurantId: profile.restaurantId,
-        }
-      },
-      client_reference_id: profile.restaurantId,
-      success_url: `${returnUrl}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${returnUrl}/dashboard`,
+      line_items: [{ price: priceId, quantity: 1 }],
+      discounts: couponId ? [{ coupon: couponId }] : undefined,
+      customer: restaurant.stripeCustomerId ?? undefined,
+      customer_email: restaurant.stripeCustomerId ? undefined : user.email,
+      client_reference_id: restaurant.id,
+      subscription_data: { metadata: { restaurantId: restaurant.id, plan }, trial_end: trialEnd },
+      billing_address_collection: 'required',
+      locale: locale === 'pt-BR' ? 'pt-BR' : 'en',
+      success_url: billingUrl('?checkout=success').toString(),
+      cancel_url: billingUrl('?checkout=canceled').toString(),
     })
-
-    return NextResponse.json({ url: session.url })
-  } catch (error: any  ) {
+    return NextResponse.redirect(session.url!, { status: 303 })
+  } catch (error) {
     console.error('Checkout error:', error)
-    return new NextResponse('Internal Server Error', { status: 500 })
+    return back('?error=checkout_failed')
   }
 }

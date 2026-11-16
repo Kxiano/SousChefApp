@@ -1,42 +1,37 @@
 import { stripe } from '@/utils/stripe'
 import { createClient } from '@/utils/supabase/server'
+import { isBillingConfigured } from '@/lib/billing'
+import { isLocale, routing } from '@/lib/routing'
 import { prisma } from '@sous-chef/db'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function POST(req: Request) {
+// Opens the Stripe customer portal. Every outcome is a 303 redirect so the
+// browser follows it with GET, not another POST.
+export async function POST(request: NextRequest) {
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+  const locale = isLocale(cookieLocale) ? cookieLocale : routing.defaultLocale
+  const billingUrl = (search = '') => new URL(`/${locale}/billing${search}`, request.url)
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.redirect(new URL(`/${locale}/login`, request.url), { status: 303 })
+
+  const profile = await prisma.profile.findUnique({ where: { id: user.id }, include: { restaurant: true } })
+  if (!profile || profile.role !== 'owner') return NextResponse.redirect(billingUrl('?error=not_owner'), { status: 303 })
+  if (!isBillingConfigured()) return NextResponse.redirect(billingUrl('?error=not_configured'), { status: 303 })
+
+  // No Stripe customer yet: there is nothing to manage, so go subscribe instead.
+  if (!profile.restaurant.stripeCustomerId) return NextResponse.redirect(billingUrl(), { status: 303 })
+
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
-    const profile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      include: { restaurant: true },
-    })
-
-    if (!profile || profile.role !== 'owner') {
-      return new NextResponse('Forbidden: Only owners can access portal', { status: 403 })
-    }
-
-    if (!profile.restaurant.stripeCustomerId) {
-      // No billing account yet — redirect to checkout instead
-      const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-      return NextResponse.redirect(new URL('/en/dashboard', origin), { status: 302 })
-    }
-
-    const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.restaurant.stripeCustomerId,
-      return_url: `${origin}/en/dashboard`,
+      return_url: billingUrl().toString(),
+      locale: locale === 'pt-BR' ? 'pt-BR' : 'en',
     })
-
-    return NextResponse.redirect(portalSession.url, { status: 302 })
-  } catch (error: any  ) {
+    return NextResponse.redirect(portalSession.url, { status: 303 })
+  } catch (error) {
     console.error('Portal error:', error)
-    return new NextResponse('Internal Server Error', { status: 500 })
+    return NextResponse.redirect(billingUrl('?error=portal_failed'), { status: 303 })
   }
 }

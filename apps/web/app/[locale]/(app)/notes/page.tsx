@@ -1,20 +1,22 @@
-import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@sous-chef/db'
-import { redirect } from 'next/navigation'
+import { requireProfile } from '@/lib/auth'
 import type { Metadata } from 'next'
-import { StickyNote, AlertTriangle, Trash2 } from 'lucide-react'
+import { getFormatter, getTranslations } from 'next-intl/server'
+import { AlertTriangle, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/page-header'
+import { Card, EmptyState } from '@/components/ui/card'
+import { Label, Textarea } from '@/components/ui/form'
+import { buttonClass } from '@/components/ui/button'
 import { createNote, deleteNote } from './actions'
 
-export const metadata: Metadata = { title: 'Note Board' }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Notes')
+  return { title: t('title') }
+}
 
 export default async function NotesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
+  const profile = await requireProfile()
+  const [t, format] = await Promise.all([getTranslations('Notes'), getFormatter()])
 
   const notes = await prisma.note.findMany({
     where: { restaurantId: profile.restaurantId },
@@ -23,137 +25,74 @@ export default async function NotesPage() {
   })
 
   return (
-    <div style={{ padding: '32px', maxWidth: '780px' }}>
-      <PageHeader
-        title="Note Board"
-        subtitle={`${notes.length} notes`}
-      />
+    <div className="max-w-[780px]">
+      <PageHeader title={t('title')} subtitle={t('subtitle', { count: notes.length })} />
 
-      {/* Post note form */}
-      <form
-        action={createNote}
-        style={{
-          marginTop: '28px',
-          padding: '16px',
-          backgroundColor: 'var(--color-surface-2)',
-          borderRadius: '12px',
-          border: '1px solid var(--color-border)',
-        }}
-      >
-        <label style={labelStyle}>Note</label>
-        <textarea
-          name="content"
-          required
-          placeholder="Leave a note for your team…"
-          rows={3}
-          style={{
-            ...inputStyle,
-            resize: 'vertical',
-            fontFamily: 'inherit',
-            lineHeight: '1.5',
-          }}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
-            <input type="checkbox" name="isUrgent" value="true" style={{ accentColor: 'var(--color-danger)' }} />
-            <AlertTriangle size={14} color="var(--color-danger)" />
-            Mark as urgent
-          </label>
-          <button type="submit" style={primaryBtnStyle} className="post-btn">
-            Post Note
-          </button>
-        </div>
-      </form>
+      {/* Post a note */}
+      <Card className="mt-7 p-4 sm:p-5">
+        <form action={createNote}>
+          <Label htmlFor="note-content">{t('note_label')}</Label>
+          <Textarea id="note-content" name="content" required placeholder={t('placeholder')} rows={3} className="resize-y" />
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <label className="flex min-h-10 cursor-pointer items-center gap-2 text-[14px] text-body">
+              <input type="checkbox" name="isUrgent" value="true" className="h-4 w-4 accent-paprika" />
+              <AlertTriangle size={15} className="text-paprika" aria-hidden />
+              {t('mark_urgent')}
+            </label>
+            <button type="submit" className={buttonClass('primary')}>{t('post')}</button>
+          </div>
+        </form>
+      </Card>
 
       {/* Notes feed */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '28px' }}>
+      <div className="mt-7 flex flex-col gap-3">
         {notes.length === 0 ? (
-          <div style={emptyStyle}>No notes yet. Leave one for your team above.</div>
+          <EmptyState>{t('empty')}</EmptyState>
         ) : (
-          notes.map(note => (
-            <div
-              key={note.id}
-              style={{
-                padding: '16px',
-                borderRadius: '12px',
-                backgroundColor: note.isUrgent ? 'rgba(239,68,68,0.06)' : 'var(--color-surface-2)',
-                border: `1px solid ${note.isUrgent ? 'rgba(239,68,68,0.25)' : 'var(--color-border)'}`,
-                transition: 'transform 200ms var(--ease-out-strong)',
-              }}
-              className="note-card"
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                {/* Icon */}
-                <div style={{
-                  width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
-                  backgroundColor: note.isUrgent ? 'rgba(239,68,68,0.12)' : 'var(--color-surface-3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {note.isUrgent
-                    ? <AlertTriangle size={14} color="var(--color-danger)" />
-                    : <StickyNote size={14} color="var(--color-brand-400)" />
-                  }
+          notes.map((note) => {
+            const canDelete = note.authorId === profile.id || profile.role === 'owner'
+            const meta = `${note.author.displayName ?? t('team_member')} · ${format.dateTime(note.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+            return note.isUrgent ? (
+              <article key={note.id} className="flex items-start gap-3 rounded-card bg-ink p-5 text-ground">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-saffron">{t('urgent')}</p>
+                  <p className="mt-2 whitespace-pre-wrap font-display text-[19px] leading-snug">{note.content}</p>
+                  <p className="mt-2.5 text-[13px] text-[#B9BEC4]">{meta}</p>
                 </div>
-
-                {/* Content */}
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '14px', color: 'var(--color-text-primary)', margin: 0, lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
-                    {note.content}
-                  </p>
-                  <p style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
-                    {note.author.displayName ?? 'Team member'}
-                    {' · '}
-                    {new Date(note.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    {note.isUrgent && (
-                      <span style={{ color: 'var(--color-danger)', fontWeight: 600, marginLeft: '6px' }}>URGENT</span>
-                    )}
-                  </p>
-                </div>
-
-                {/* Delete (own notes or owner) */}
-                {(note.authorId === profile.id || profile.role === 'owner') && (
+                {canDelete && (
                   <form action={deleteNote.bind(null, note.id)}>
-                    <button type="submit" style={deleteBtnStyle} className="delete-btn">
-                      <Trash2 size={13} />
+                    <button
+                      type="submit"
+                      aria-label={t('delete')}
+                      className="flex h-10 w-10 items-center justify-center rounded-control border border-[#2D3137] text-[#B9BEC4] transition-colors hover:border-paprika hover:text-white"
+                    >
+                      <Trash2 size={15} aria-hidden />
                     </button>
                   </form>
                 )}
-              </div>
-            </div>
-          ))
+              </article>
+            ) : (
+              <Card key={note.id} className="flex items-start gap-3 p-5">
+                <div className="min-w-0 flex-1">
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">{note.content}</p>
+                  <p className="mt-2 text-[13px] text-muted">{meta}</p>
+                </div>
+                {canDelete && (
+                  <form action={deleteNote.bind(null, note.id)}>
+                    <button
+                      type="submit"
+                      aria-label={t('delete')}
+                      className="flex h-10 w-10 items-center justify-center rounded-control border border-line text-muted transition-colors hover:border-[#F1C7BE] hover:text-paprika"
+                    >
+                      <Trash2 size={15} aria-hidden />
+                    </button>
+                  </form>
+                )}
+              </Card>
+            )
+          })
         )}
       </div>
-
-      <style>{`
-        .post-btn:hover { opacity: 0.85 !important; }
-        .delete-btn:hover { color: var(--color-danger) !important; border-color: rgba(239,68,68,0.3) !important; }
-        .note-card:hover { transform: translateY(-1px); }
-        textarea::placeholder { color: var(--color-text-muted); }
-      `}</style>
     </div>
   )
-}
-
-const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '11px', fontWeight: 500,
-  color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em',
-}
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: '8px',
-  backgroundColor: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
-  color: 'var(--color-text-primary)', fontSize: '13.5px', outline: 'none',
-}
-const primaryBtnStyle: React.CSSProperties = {
-  padding: '9px 20px', borderRadius: '8px', backgroundColor: 'var(--color-brand-500)',
-  border: 'none', color: '#000', cursor: 'pointer', fontWeight: 600, fontSize: '13px',
-  transition: 'opacity 150ms',
-}
-const deleteBtnStyle: React.CSSProperties = {
-  display: 'flex', padding: '6px', borderRadius: '7px',
-  backgroundColor: 'transparent', border: '1px solid var(--color-border)',
-  color: 'var(--color-text-muted)', cursor: 'pointer', transition: 'color 150ms, border-color 150ms',
-}
-const emptyStyle: React.CSSProperties = {
-  padding: '48px 24px', textAlign: 'center', borderRadius: '12px',
-  border: '1px dashed var(--color-border)', color: 'var(--color-text-muted)', fontSize: '14px',
 }

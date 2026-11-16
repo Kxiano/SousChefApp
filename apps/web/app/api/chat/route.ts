@@ -2,6 +2,13 @@ import { createSousChefAgent } from '@/lib/ai/sous-chef-agent'
 import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@sous-chef/db'
 import { AIMessageChunk } from '@langchain/core/messages'
+import { cookies } from 'next/headers'
+import { isLocale } from '@/lib/routing'
+
+const FALLBACK_REPLY = {
+  en: 'Sorry, I could not complete that request. Please try again.',
+  'pt-BR': 'Desculpe, não consegui concluir esse pedido. Tente novamente.',
+} as const
 
 export const maxDuration = 30
 
@@ -26,6 +33,8 @@ export async function POST(req: Request) {
   if (!Array.isArray(body.messages) || !body.messages.every(isChatMessage)) return new Response('Messages must be non-empty user or assistant text messages.', { status: 400 })
 
   const messages = body.messages.slice(-50)
+  const cookieLocale = (await cookies()).get('NEXT_LOCALE')?.value
+  const locale = isLocale(cookieLocale) ? cookieLocale : 'en'
   const lastMessage = messages.at(-1)
   if (!lastMessage || lastMessage.role !== 'user') return new Response('The final message must be from the user.', { status: 400 })
 
@@ -36,7 +45,7 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const agent = createSousChefAgent({ restaurantId: profile.restaurantId, profileId: profile.id })
+        const agent = createSousChefAgent({ restaurantId: profile.restaurantId, profileId: profile.id, locale })
         const events = await agent.stream({ messages }, { streamMode: 'messages' })
         for await (const event of events) {
           const [chunk] = event as unknown as [AIMessageChunk, unknown]
@@ -46,7 +55,7 @@ export async function POST(req: Request) {
         }
       } catch (error) {
         console.error('Sous Chef agent failed:', error)
-        const fallback = 'Sorry, I could not complete that request. Please try again.'
+        const fallback = FALLBACK_REPLY[locale]
         responseText ||= fallback
         controller.enqueue(encoder.encode(fallback))
       } finally {

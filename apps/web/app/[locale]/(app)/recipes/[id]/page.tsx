@@ -1,20 +1,27 @@
-import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@sous-chef/db'
-import { redirect, notFound } from 'next/navigation'
+import { requireProfile } from '@/lib/auth'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Trash2, ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { getFormatter, getTranslations } from 'next-intl/server'
+import { Trash2, ArrowLeft, Pencil, Calculator } from 'lucide-react'
+import { ConfirmSubmitButton } from '@/components/confirm-submit-button'
+import { Link } from '@/lib/navigation'
+import { buttonClass } from '@/components/ui/button'
+import { Card, SectionLabel } from '@/components/ui/card'
+import { Table, Th, Td } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { deleteRecipe } from '../actions'
 
-export const metadata: Metadata = { title: 'Recipe Detail' }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Recipes')
+  return { title: t('detail.meta_title') }
+}
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
+  const profile = await requireProfile()
+  const [t, format] = await Promise.all([getTranslations('Recipes'), getFormatter()])
+  const money = (value: number) => format.number(value, { style: 'currency', currency: 'EUR' })
 
   const recipe = await prisma.recipe.findFirst({
     where: { id, restaurantId: profile.restaurantId },
@@ -32,106 +39,84 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
   }, 0)
 
   return (
-    <div style={{ padding: '32px', maxWidth: '700px' }}>
-      <Link href="/recipes" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: '20px' }}>
-        <ArrowLeft size={14} /> Back to Recipes
+    <div className="max-w-3xl">
+      <Link href="/recipes" className="inline-flex min-h-10 items-center gap-1.5 text-[13.5px] text-muted hover:text-ink">
+        <ArrowLeft size={14} aria-hidden /> {t('back')}
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>{recipe.name}</h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-            Yields {recipe.yieldPortions} portion{recipe.yieldPortions !== 1 ? 's' : ''}
-          </p>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="font-display text-[30px] font-extrabold leading-[1.1] tracking-[-0.02em] sm:text-[34px]">{recipe.name}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge>{t('detail.yields', { count: recipe.yieldPortions })}</Badge>
+            {totalCost > 0 && (
+              <Badge tone="brand"><span className="font-mono tabular">{t('cost_badge', { cost: money(totalCost) })}</span></Badge>
+            )}
+          </div>
         </div>
-        <form action={deleteRecipe.bind(null, recipe.id)}>
-          <button type="submit" style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 14px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)',
-            backgroundColor: 'transparent', color: 'var(--color-danger)',
-            fontSize: '13px', cursor: 'pointer', transition: 'background 150ms',
-          }}
-            className="delete-btn"
-          >
-            <Trash2 size={14} /> Delete
-          </button>
-        </form>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/recipes/${recipe.id}/edit`} className={buttonClass('secondary')}>
+            <Pencil size={14} aria-hidden /> {t('detail.edit')}
+          </Link>
+          <form action={deleteRecipe.bind(null, recipe.id)}>
+            <ConfirmSubmitButton
+              message={t('detail.delete_confirm', { name: recipe.name })}
+              className={buttonClass('danger')}
+            >
+              <Trash2 size={14} aria-hidden /> {t('detail.delete')}
+            </ConfirmSubmitButton>
+          </form>
+        </div>
       </div>
 
       {recipe.notes && (
-        <p style={{ marginTop: '16px', padding: '12px 16px', borderRadius: '10px', backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-          {recipe.notes}
-        </p>
+        <Card className="mt-6 p-5">
+          <SectionLabel className="mb-2">{t('notes_heading')}</SectionLabel>
+          <p className="whitespace-pre-line text-[14.5px] leading-relaxed text-body">{recipe.notes}</p>
+        </Card>
       )}
 
-      {/* Ingredient list */}
-      <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '28px', marginBottom: '12px' }}>
-        Ingredients (per portion)
-      </h2>
-
-      <div style={{ border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="mt-8">
+        <SectionLabel>{t('detail.ingredients_heading')}</SectionLabel>
+        <Table>
           <thead>
-            <tr style={{ backgroundColor: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
-              <th style={thStyle}>Ingredient</th>
-              <th style={{ ...thStyle, textAlign: 'right' }}>Qty/portion</th>
-              <th style={{ ...thStyle, textAlign: 'right' }}>Cost/portion</th>
+            <tr>
+              <Th>{t('detail.col_ingredient')}</Th>
+              <Th align="right">{t('detail.col_qty')}</Th>
+              <Th align="right">{t('detail.col_cost')}</Th>
             </tr>
           </thead>
           <tbody>
-            {recipe.ingredients.map((ri, i) => (
-              <tr key={ri.id} style={{ borderBottom: i < recipe.ingredients.length - 1 ? '1px solid var(--color-border-subtle)' : 'none' }}>
-                <td style={tdStyle}>{ri.ingredient.name}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--color-text-secondary)' }}>
-                  {Number(ri.quantityPerPortion)} {ri.ingredient.unit}
-                </td>
-                <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--color-text-muted)' }}>
+            {recipe.ingredients.map((ri) => (
+              <tr key={ri.id}>
+                <Td className="font-medium">{ri.ingredient.name}</Td>
+                <Td align="right" className="whitespace-nowrap font-mono text-body tabular">
+                  {format.number(Number(ri.quantityPerPortion))} {ri.ingredient.unit}
+                </Td>
+                <Td align="right" className="whitespace-nowrap font-mono text-muted tabular">
                   {ri.ingredient.costPerUnit
-                    ? `€${(Number(ri.ingredient.costPerUnit) * Number(ri.quantityPerPortion)).toFixed(2)}`
+                    ? money(Number(ri.ingredient.costPerUnit) * Number(ri.quantityPerPortion))
                     : '—'}
-                </td>
+                </Td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-2)' }}>
-              <td colSpan={2} style={{ ...tdStyle, fontWeight: 600 }}>Total cost per portion</td>
-              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--color-brand-400)' }}>
-                {totalCost > 0 ? `€${totalCost.toFixed(2)}` : '—'}
-              </td>
+            <tr className="bg-sunken">
+              <Td colSpan={2} className="border-line font-semibold">{t('detail.total_cost')}</Td>
+              <Td align="right" className="whitespace-nowrap border-line font-mono font-bold text-saffron-dark tabular">
+                {totalCost > 0 ? money(totalCost) : '—'}
+              </Td>
             </tr>
           </tfoot>
-        </table>
+        </Table>
       </div>
 
-      <div style={{ marginTop: '20px', display: 'flex', gap: '8px' }}>
-        <Link
-          href={`/calculator?recipe=${recipe.id}`}
-          style={{
-            padding: '10px 20px', borderRadius: '10px',
-            backgroundColor: 'var(--color-brand-500)', color: '#000',
-            fontWeight: 600, fontSize: '13.5px', textDecoration: 'none',
-            transition: 'background 150ms, transform 150ms',
-          }}
-          className="calc-btn"
-        >
-          Calculate Ingredient Needs →
+      <div className="mt-6">
+        <Link href={`/calculator?recipe=${recipe.id}`} className={buttonClass('primary', 'lg')}>
+          <Calculator size={16} aria-hidden /> {t('detail.calculate')}
         </Link>
       </div>
-
-      <style>{`
-        .delete-btn:hover { background: rgba(239,68,68,0.08) !important; }
-        .calc-btn:hover { background: var(--color-brand-400) !important; }
-        .calc-btn:active { transform: scale(0.97); }
-      `}</style>
     </div>
   )
-}
-
-const thStyle: React.CSSProperties = {
-  padding: '10px 16px', textAlign: 'left', fontSize: '11px',
-  fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em',
-}
-const tdStyle: React.CSSProperties = {
-  padding: '12px 16px', fontSize: '13.5px', color: 'var(--color-text-primary)',
 }

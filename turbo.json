@@ -8,18 +8,34 @@
     "DIRECT_URL_PREVIEW",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
-    "RESEND_API_KEY"
+    "RESEND_API_KEY",
+    "STRIPE_PRICE_ID",
+    "RESEND_FROM_EMAIL",
+    "NEXT_PUBLIC_APP_URL",
+    "STRIPE_PRICE_MONTHLY",
+    "STRIPE_PRICE_SEMIANNUAL",
+    "STRIPE_PRICE_ANNUAL",
+    "STRIPE_COUPON_SEMIANNUAL",
+    "STRIPE_COUPON_ANNUAL"
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**"
+      ]
     },
     "@sous-chef/db#build": {
       "outputs": []
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "dev": {
       "cache": false,

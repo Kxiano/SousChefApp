@@ -4,7 +4,7 @@ import { tool } from '@langchain/core/tools'
 import { createAgent } from 'langchain'
 import { z } from 'zod'
 
-type SousChefContext = { restaurantId: string; profileId: string }
+type SousChefContext = { restaurantId: string; profileId: string; locale?: string }
 
 const SYSTEM_PROMPT = `You are the Sous Chef AI Assistant for a restaurant kitchen. You are speaking with a kitchen team member. Be helpful, concise, and professional.
 
@@ -17,7 +17,7 @@ You have tools to manage inventory, recipes, portions, sales, shifts, and team n
 const positiveWholeNumber = z.number().int().describe('A positive whole number > 0')
 
 /** Creates a request-scoped agent so tenant identifiers remain server-only. */
-export function createSousChefAgent({ restaurantId, profileId }: SousChefContext) {
+export function createSousChefAgent({ restaurantId, profileId, locale = 'en' }: SousChefContext) {
   const tools = [
     tool(async () => {
       const ingredients = await prisma.ingredient.findMany({
@@ -155,6 +155,16 @@ export function createSousChefAgent({ restaurantId, profileId }: SousChefContext
     }),
 
     tool(async ({ action, shiftId, profileId, startsAt, endsAt, roleLabel, notes }) => {
+      // Shifts can only be assigned to members of this restaurant.
+      if (profileId) {
+        const member = await prisma.profile.findFirst({ where: { id: profileId, restaurantId }, select: { id: true } })
+        if (!member) return { error: 'Team member not found. Use get_team_members to find them.' }
+      }
+      const start = startsAt ? new Date(startsAt) : undefined
+      const end = endsAt ? new Date(endsAt) : undefined
+      if ((start && isNaN(start.getTime())) || (end && isNaN(end.getTime()))) return { error: 'startsAt and endsAt must be valid ISO dates.' }
+      if (start && end && end <= start) return { error: 'A shift must end after it starts.' }
+
       if (action === 'create') {
         if (!profileId || !startsAt || !endsAt) return { error: 'profileId, startsAt, and endsAt are required to create a shift.' };
         const shift = await prisma.shift.create({ data: { restaurantId, profileId, startsAt: new Date(startsAt), endsAt: new Date(endsAt), roleLabel, notes } });
@@ -215,5 +225,8 @@ export function createSousChefAgent({ restaurantId, profileId }: SousChefContext
     temperature: 0.2,
     maxOutputTokens: 1024,
   })
-  return createAgent({ model, tools, systemPrompt: SYSTEM_PROMPT, name: 'sous_chef' })
+  const languageRule = locale === 'pt-BR'
+    ? '- Always reply in Brazilian Portuguese (pt-BR), whatever language the tool results are in.'
+    : '- Always reply in English.'
+  return createAgent({ model, tools, systemPrompt: `${SYSTEM_PROMPT}\n${languageRule}`, name: 'sous_chef' })
 }

@@ -3,14 +3,581 @@
     "dashboard": "Painel",
     "inventory": "Estoque",
     "recipes": "Receitas",
-    "calculator": "Calculadora",
-    "portions": "Porções",
-    "purchases": "Compras",
+    "calculator": "Calculadora de preparo",
+    "portions": "Porções prontas",
+    "purchases": "Pedidos de compra",
     "shifts": "Turnos",
-    "best_sellers": "Mais Vendidos",
+    "best_sellers": "Mais vendidos",
     "notes": "Avisos",
-    "ai_chef": "Chef IA",
-    "manage_billing": "Gerenciar Assinatura",
-    "sign_out": "Sair"
+    "ai_chef": "Sous Chef IA",
+    "manage_billing": "Assinatura",
+    "sign_out": "Sair",
+    "team": "Equipe",
+    "group_service": "Serviço",
+    "group_kitchen": "Cozinha",
+    "group_team": "Equipe",
+    "owner": "Dono",
+    "staff": "Equipe",
+    "trial_days_left": "{days, plural, one {Teste grátis · # dia restante} other {Teste grátis · # dias restantes}}",
+    "trial_cta": "Assine durante o teste e economize até 35%",
+    "open_menu": "Abrir menu",
+    "close_menu": "Fechar menu",
+    "app": "Navegação do app"
+  },
+  "Common": {
+    "copy": "Copiar",
+    "copied": "Copiado"
+  },
+  "Team": {
+    "title": "Equipe",
+    "subtitle": "{count, plural, one {# membro} other {# membros}} nesta cozinha",
+    "invite": {
+      "heading": "Convidar alguém",
+      "email_label": "E-mail (opcional)",
+      "email_placeholder": "cozinheiro@exemplo.com",
+      "submit": "Criar link de convite",
+      "help": "Cada link funciona uma vez e expira em {days} dias. Informe um e-mail para enviá-lo ou copie o link e compartilhe você mesmo."
+    },
+    "created": {
+      "link": "Link de convite criado. Copie abaixo e envie para a pessoa.",
+      "sent": "Convite enviado por e-mail. Você também pode copiar o link abaixo.",
+      "simulated": "Link de convite criado. O envio de e-mail não está configurado, então copie o link abaixo e compartilhe.",
+      "failed": "O link de convite foi criado, mas não foi possível enviar o e-mail. Copie o link abaixo e compartilhe você mesmo."
+    },
+    "pending": {
+      "heading": "Convites pendentes",
+      "empty": "Nenhum convite pendente.",
+      "link_label": "Link de convite",
+      "revoke": "Revogar",
+      "meta": "Criado {created} · expira em {expires}"
+    },
+    "members": {
+      "heading": "Membros",
+      "you": "você",
+      "unnamed": "Membro sem nome",
+      "owner": "Dono",
+      "staff": "Equipe",
+      "owner_only": "Só o dono da cozinha pode convidar novas pessoas."
+    },
+    "errors": {
+      "not_owner": "Só o dono da cozinha pode gerenciar convites.",
+      "invalid_email": "Esse e-mail não parece válido.",
+      "missing_name": "A cozinha precisa de um nome."
+    },
+    "kitchen": {
+      "heading": "Cozinha",
+      "name_label": "Nome da cozinha",
+      "save": "Salvar nome",
+      "renamed": "Nome da cozinha atualizado."
+    }
+  },
+  "Auth": {
+    "title": "Entrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "log_in": "Entrar",
+    "sign_up": "Criar conta",
+    "errors": {
+      "invalid_credentials": "E-mail ou senha incorretos.",
+      "email_not_confirmed": "Confirme seu e-mail primeiro. Procure o link na sua caixa de entrada.",
+      "user_already_exists": "Já existe uma conta com este e-mail. Entre em vez de criar outra.",
+      "weak_password": "Use uma senha com pelo menos 6 caracteres.",
+      "signup_failed": "Não foi possível criar sua conta. Tente novamente em instantes."
+    },
+    "messages": {
+      "check_email": "Conta criada. Confirme pelo link enviado ao seu e-mail e depois entre."
+    },
+    "heading": "Bem-vindo de volta, Chef.",
+    "subheading": "Entre na sua cozinha ou crie uma conta para começar seus 30 dias grátis.",
+    "password_hint": "Pelo menos 6 caracteres.",
+    "trial_note": "30 dias grátis. Não precisa de cartão para começar."
+  },
+  "BestSellers": {
+    "title": "Mais vendidos",
+    "subtitle": "Ranking de vendas por receita",
+    "periods": {
+      "today": "Hoje",
+      "week": "Últimos 7 dias",
+      "month": "Últimos 30 dias",
+      "all": "Todo o período"
+    },
+    "empty": "Nenhuma venda neste período. Registre vendas abaixo.",
+    "sold_count": "{count, plural, one {{formatted} vendida} other {{formatted} vendidas}}",
+    "manual": {
+      "heading": "Registrar venda manual",
+      "recipe": "Receita",
+      "select_recipe": "Selecione uma receita…",
+      "quantity": "Qtd. vendida",
+      "submit": "Registrar"
+    }
+  },
+  "Billing": {
+    "title": "Assinatura bloqueada",
+    "heading": "Conta bloqueada",
+    "body": "A assinatura da sua cozinha expirou ou um pagamento falhou. Atualize seus dados de cobrança para voltar a usar o Sous Chef.",
+    "manage": "Gerenciar assinatura",
+    "sign_out": "Sair",
+    "page": {
+      "title": "Assinatura",
+      "subtitle": "Sua assinatura do Sous Chef",
+      "plan_heading": "Plano",
+      "plan_name": "Sous Chef para {restaurant}",
+      "price": "{amount} por {interval, select, month {mês} year {ano} week {semana} day {dia} other {período}}",
+      "status": {
+        "active": "Ativa",
+        "trialing": "Teste grátis",
+        "past_due": "Pagamento falhou",
+        "canceled": "Cancelada",
+        "incomplete": "Incompleta",
+        "unpaid": "Não paga"
+      },
+      "trial_notice": "Você está no período de teste grátis. Assine quando quiser para manter sua cozinha funcionando sem interrupções.",
+      "past_due_notice": "Seu último pagamento falhou. Atualize os dados de pagamento até {date} para manter o acesso.",
+      "canceled_notice": "Sua assinatura foi cancelada. Assine novamente para liberar o app.",
+      "subscribe": "Assinar",
+      "manage": "Gerenciar assinatura",
+      "checkout_success": "Obrigado! Sua assinatura está sendo ativada e aparecerá aqui em instantes.",
+      "checkout_canceled": "O pagamento foi cancelado. Nada foi cobrado.",
+      "not_configured": "Os pagamentos online ainda não estão configurados neste app.",
+      "owner_only": "Só o dono da cozinha pode gerenciar a assinatura.",
+      "errors": {
+        "not_owner": "Só o dono da cozinha pode gerenciar a assinatura.",
+        "not_configured": "Os pagamentos online ainda não estão configurados neste app.",
+        "already_subscribed": "Esta cozinha já tem uma assinatura. Use \"Gerenciar assinatura\" para alterá-la.",
+        "checkout_failed": "Não foi possível iniciar o pagamento. Tente novamente em instantes.",
+        "portal_failed": "Não foi possível abrir o portal de pagamento. Tente novamente em instantes.",
+        "plan_unavailable": "Esse plano não está disponível no momento."
+      },
+      "trial_days_left": "{days, plural, one {Teste grátis · # dia restante} other {Teste grátis · # dias restantes}}",
+      "trial_offer_line": "Assine até {date} para garantir a oferta do teste: até 35% off.",
+      "free_days_note": "Seus dias grátis continuam grátis: a cobrança só começa quando o teste termina. Cancele antes e você não paga nada.",
+      "trial_ended_notice": "Seu teste grátis terminou. Escolha um plano para liberar a cozinha.",
+      "per_month": "/mês",
+      "best_value": "Melhor custo · {percent}% off",
+      "trial_offer": "Oferta do teste · {percent}% off",
+      "plans": {
+        "monthly": {
+          "name": "Mensal",
+          "tagline": "Flexível. Cancele quando quiser.",
+          "billed": "Cobrado {amount} por mês",
+          "first_period": "{amount} no primeiro mês"
+        },
+        "semiannual": {
+          "name": "6 meses",
+          "tagline": "Para uma temporada inteira de serviço.",
+          "billed": "Cobrado {amount} a cada 6 meses",
+          "first_period": "{amount} nos primeiros 6 meses"
+        },
+        "annual": {
+          "name": "1 ano",
+          "tagline": "O menor preço para a sua cozinha.",
+          "billed": "Cobrado {amount} por ano",
+          "first_period": "{amount} no primeiro ano"
+        }
+      },
+      "features": {
+        "everything": "Todos os recursos, toda a equipe, Sous Chef IA incluído",
+        "discount": "{percent}% off {plan, select, annual {no primeiro ano} other {nos primeiros 6 meses}}",
+        "flexible": "Sem compromisso além {plan, select, monthly {do mês atual} annual {do ano atual} other {dos 6 meses atuais}}",
+        "then": "Depois {amount} {plan, select, monthly {por mês} annual {por ano} other {a cada 6 meses}}"
+      },
+      "claim": "Garantir {percent}% off",
+      "choose": {
+        "monthly": "Escolher mensal",
+        "semiannual": "Escolher 6 meses",
+        "annual": "Escolher 1 ano"
+      },
+      "secure_note": "Os pagamentos são processados com segurança pela Stripe. Cancele quando quiser em “Gerenciar assinatura”."
+    },
+    "locked": {
+      "trial_ended": {
+        "heading": "Seu teste grátis terminou.",
+        "body": "Obrigado por cozinhar com o Sous Chef nesses 30 dias. Escolha um plano para continuar exatamente de onde parou."
+      },
+      "payment_failed": {
+        "heading": "Não conseguimos processar seu último pagamento.",
+        "body": "Atualize os dados de pagamento para liberar a cozinha de novo."
+      },
+      "canceled": {
+        "heading": "Sua assinatura foi cancelada.",
+        "body": "Assine novamente quando quiser para liberar a cozinha."
+      },
+      "data_safe": "Suas receitas, estoque e equipe continuam salvos.",
+      "choose_plan": "Escolher um plano"
+    }
+  },
+  "Calculator": {
+    "title": "Calculadora de preparo",
+    "subtitle": "Veja exatamente o que você precisa para preparar uma receita",
+    "recipe_label": "Receita",
+    "select_recipe": "Selecione uma receita…",
+    "portions_label": "Porções",
+    "calculate": "Calcular",
+    "result_heading": "{recipe} × {count, plural, one {# porção} other {# porções}}",
+    "estimated_cost": "Custo estimado: {cost}",
+    "shortage": "Alguns ingredientes estão abaixo da quantidade necessária.",
+    "create_po": "Criar um pedido de compra →",
+    "col_ingredient": "Ingrediente",
+    "col_required": "Necessário",
+    "col_in_stock": "Em estoque",
+    "col_cost": "Custo",
+    "col_status": "Situação",
+    "short": "Faltam {amount} {unit}",
+    "ok": "OK",
+    "total_cost": "Custo total estimado",
+    "mark_prepared": "Marcar {count, plural, one {# porção como preparada} other {# porções como preparadas}}",
+    "mark_prepared_help": "Isso vai descontar os ingredientes do estoque e adicioná-los às porções prontas.",
+    "empty": "Selecione uma receita e o número de porções acima para calcular os ingredientes necessários.",
+    "errors": {
+      "insufficient_stock": "O estoque mudou desde o cálculo e não há mais o suficiente. Nada foi descontado."
+    },
+    "ticket_label": "Calculadora de preparo",
+    "per_plate": "{cost} / prato"
+  },
+  "Chat": {
+    "title": "Chef IA",
+    "heading": "Assistente Chef IA",
+    "subtitle": "Pergunte sobre estoque e receitas ou peça para registrar uma venda.",
+    "empty_greeting": "Olá! Eu sou seu Sous Chef com IA.",
+    "empty_hint": "Pergunte sobre estoque e receitas ou peça para registrar uma venda.",
+    "placeholder": "Pergunte ao seu Chef IA...",
+    "input_label": "Mensagem para o Chef IA",
+    "send": "Enviar mensagem",
+    "thinking": "O Chef IA está pensando",
+    "send_error": "Desculpe, não foi possível enviar essa mensagem. Tente novamente."
+  },
+  "Dashboard": {
+    "title": "Painel",
+    "heading": "Visão geral da cozinha",
+    "stats": {
+      "low_stock": "Alertas de estoque baixo",
+      "sold_today": "Vendidos hoje",
+      "draft_orders": "Pedidos de compra em rascunho",
+      "urgent_notes": "Avisos urgentes"
+    },
+    "shifts": {
+      "heading": "Próximos turnos",
+      "view_all": "Ver todos →",
+      "empty": "Nenhum turno agendado.",
+      "unnamed": "Membro da equipe"
+    },
+    "greeting": {
+      "morning": "Bom dia, {name}.",
+      "afternoon": "Boa tarde, {name}.",
+      "evening": "Boa noite, {name}.",
+      "morning_generic": "Bom dia.",
+      "afternoon_generic": "Boa tarde.",
+      "evening_generic": "Boa noite."
+    },
+    "actions": {
+      "new_order": "Novo pedido de compra",
+      "plan_prep": "Planejar o preparo de hoje"
+    },
+    "hints": {
+      "low_stock": "ingredientes para repor",
+      "sold_today": "porções desde a meia-noite",
+      "draft_orders": "aguardando envio",
+      "urgent_notes": "para toda a equipe"
+    },
+    "reorder": {
+      "heading": "Repor antes do serviço",
+      "create": "Criar pedido",
+      "empty": "Tudo está acima do mínimo.",
+      "more": "{count, plural, one {Mais # ingrediente} other {Mais # ingredientes}} abaixo do mínimo"
+    },
+    "urgent": {
+      "eyebrow": "Aviso urgente",
+      "more": "+{count}",
+      "someone": "Alguém",
+      "view_all": "Todos os avisos",
+      "empty": "Nenhum aviso urgente. Alergias, mesas VIP ou equipamento quebrado vão aqui.",
+      "post": "Publicar aviso"
+    }
+  },
+  "Ingredients": {
+    "title": "Estoque",
+    "heading": "Estoque de ingredientes",
+    "subtitle": "{count, plural, one {# item controlado} other {# itens controlados}}",
+    "form": {
+      "name": "Nome",
+      "name_placeholder": "ex.: Tomates",
+      "unit": "Unidade",
+      "quantity": "Quantidade",
+      "low_stock_at": "Estoque baixo em",
+      "cost_per_unit": "Custo/unidade (€)",
+      "add": "Adicionar ingrediente"
+    },
+    "empty": "Nenhum ingrediente ainda. Adicione o primeiro acima.",
+    "table": {
+      "name": "Nome",
+      "unit": "Unidade",
+      "stock": "Estoque",
+      "low_stock": "Estoque baixo",
+      "cost_per_unit": "Custo/unidade"
+    },
+    "delete": "Excluir",
+    "low_count": "{count, plural, one {# abaixo do mínimo} other {# abaixo do mínimo}}",
+    "low_badge": "Baixo"
+  },
+  "Invite": {
+    "title": "Entrar em uma cozinha",
+    "missing_token": "Convite inválido ou ausente.",
+    "invalid": "Este link de convite é inválido ou expirou.",
+    "join": "Entrar na equipe de {restaurant}",
+    "logged_in_as": "Você entrou como {email}. Quer fazer parte desta equipe de cozinha?",
+    "accept": "Aceitar convite",
+    "log_in_to_accept": "Entre na sua conta para aceitar este convite.",
+    "log_in_or_sign_up": "Entrar ou criar conta",
+    "home": "Ir para a página inicial"
+  },
+  "Landing": {
+    "meta_title": "Sous Chef · Gestão de cozinha para restaurantes",
+    "meta_description": "Estoque, receitas, preparo e equipe em um só lugar. Saiba o que preparar, o que pedir e quanto custa cada prato. 30 dias grátis.",
+    "nav_label": "Principal",
+    "nav_features": "Recursos",
+    "nav_pricing": "Preços",
+    "nav_login": "Entrar",
+    "nav_cta": "Começar teste grátis",
+    "hero_badge": "30 dias grátis · sem cartão",
+    "hero_title": "Gestão de cozinha para restaurantes que cozinham de verdade.",
+    "hero_body": "Estoque, receitas, preparo e equipe em um só lugar. O Sous Chef mostra o que preparar, o que pedir e quanto custa cada prato, antes do serviço começar.",
+    "hero_cta": "Começar meus 30 dias grátis",
+    "hero_secondary": "Ver como funciona",
+    "hero_languages": "Em Português (Brasil) e English.",
+    "demo_label": "Calculadora de preparo",
+    "demo_recipe": "Ragù alla bolognese",
+    "demo_cost": "{cost} / prato",
+    "demo_col_ingredient": "Ingrediente",
+    "demo_col_need": "Precisa",
+    "demo_col_stock": "Em estoque",
+    "demo_col_status": "Status",
+    "demo_items": {
+      "beef": "Carne moída",
+      "tomatoes": "Tomate san marzano",
+      "pancetta": "Pancetta",
+      "soffritto": "Soffritto"
+    },
+    "demo_ready": "Pronto",
+    "demo_short": "Falta {amount}",
+    "demo_order": "Pedir 0,70 kg de pancetta",
+    "demo_prep": "Preparar 22 pratos agora",
+    "features_title": "Cada praça, da entrega ao passe.",
+    "f1_card_title": "Estoque baixo",
+    "f1_card_count": "3 itens",
+    "f1_card_basil": "Manjericão",
+    "f1_title": "Estoque que se reabastece",
+    "f1_body": "Defina um mínimo por ingrediente. Tudo abaixo dele vai para um pedido de compra, pronto para enviar.",
+    "f2_card_cost": "Custo por prato",
+    "f2_card_yield": "Rendimento",
+    "f2_card_portions": "{count} porções",
+    "f2_title": "Receitas com custo real",
+    "f2_body": "Monte receitas com os seus ingredientes e veja o custo de cada prato conforme os preços mudam.",
+    "f3_card_user": "Vendemos 18 lasanhas hoje",
+    "f3_card_reply": "Registrei 18 vendidas. Sobram 6 porções para amanhã.",
+    "f3_title": "Um sous chef de IA na linha",
+    "f3_body": "Pergunte o que preparar, registre vendas e descartes ou confira um turno, em linguagem simples, no seu idioma.",
+    "pricing_title": "Um plano para a cozinha inteira.",
+    "pricing_body": "Todos os recursos e toda a equipe por {price} por mês. Teste grátis por 30 dias; assine durante o teste e pague a partir de {annual} por mês no primeiro ano ({percent}% off)."
+  },
+  "Notes": {
+    "title": "Mural de avisos",
+    "subtitle": "{count, plural, =0 {Nenhum aviso} one {# aviso} other {# avisos}}",
+    "note_label": "Aviso",
+    "placeholder": "Deixe um aviso para a equipe…",
+    "mark_urgent": "Marcar como urgente",
+    "post": "Publicar aviso",
+    "empty": "Nenhum aviso ainda. Deixe um para a equipe acima.",
+    "team_member": "Membro da equipe",
+    "urgent": "URGENTE",
+    "delete": "Excluir aviso"
+  },
+  "Portions": {
+    "title": "Porções prontas",
+    "subtitle": "Acompanhe o que está pronto e registre as vendas",
+    "prepared_success": "Porções preparadas e ingredientes descontados do estoque.",
+    "errors": {
+      "insufficient_stock": "Não há ingredientes suficientes em estoque para preparar essas porções. Nada foi descontado.",
+      "not_enough_portions": "Não há porções prontas suficientes para registrar isso.",
+      "recipe_not_found": "Essa receita não existe mais."
+    },
+    "prepare": {
+      "heading": "Marcar como preparado",
+      "recipe": "Receita",
+      "select_recipe": "Selecione uma receita…",
+      "portions": "Porções preparadas",
+      "submit": "Preparar"
+    },
+    "stock": {
+      "heading": "Estoque atual",
+      "empty": "Nenhuma porção preparada ainda. Use o formulário acima para marcar uma receita como preparada.",
+      "recipe": "Receita",
+      "ready": "Prontas",
+      "sold_today": "Vendidas hoje",
+      "discarded_today": "Descartadas hoje",
+      "log_sale": "Registrar",
+      "sold": "Vendido",
+      "discard": "Descartar",
+      "qty_label": "Quantidade"
+    }
+  },
+  "PurchaseOrders": {
+    "title": "Pedidos de compra",
+    "subtitle": "{count, plural, one {# pedido} other {# pedidos}} no total",
+    "status": {
+      "draft": "Rascunho",
+      "sent": "Enviado",
+      "received": "Recebido"
+    },
+    "create": {
+      "heading": "Novo pedido",
+      "below_threshold": "{count, plural, one {# ingrediente está abaixo} other {# ingredientes estão abaixo}} do mínimo e já {count, plural, one {foi preenchido} other {foram preenchidos}}.",
+      "ingredient_stock": "{name} ({unit}) — estoque: {stock}",
+      "notes": "Observações (opcional)",
+      "notes_placeholder": "Fornecedor, urgência…",
+      "submit": "Criar rascunho",
+      "low": "Baixo",
+      "in_stock": "Em estoque: {stock} {unit}",
+      "order_qty_label": "Quantidade a pedir de {name}"
+    },
+    "orders": {
+      "heading": "Pedidos",
+      "empty": "Nenhum pedido de compra ainda. Crie um acima.",
+      "mark_sent": "Marcar como enviado",
+      "mark_received": "Marcar como recebido",
+      "delete": "Excluir",
+      "received_qty": "(recebido: {quantity})"
+    }
+  },
+  "Recipes": {
+    "meta_title": "Receitas",
+    "title": "Livro de receitas",
+    "count": "{count, plural, one {# receita} other {# receitas}}",
+    "new_button": "Nova receita",
+    "empty": "Nenhuma receita ainda. Crie sua primeira receita para começar.",
+    "card_meta": "{ingredients, plural, one {# ingrediente} other {# ingredientes}} · Rendimento: {portions, plural, one {# porção} other {# porções}}",
+    "back": "Voltar para receitas",
+    "new": {
+      "title": "Nova receita",
+      "subtitle": "Crie uma receita e defina os ingredientes necessários"
+    },
+    "detail": {
+      "meta_title": "Receita",
+      "yields": "Rende {count, plural, one {# porção} other {# porções}}",
+      "delete": "Excluir",
+      "ingredients_heading": "Ingredientes (por porção)",
+      "col_ingredient": "Ingrediente",
+      "col_qty": "Qtd./porção",
+      "col_cost": "Custo/porção",
+      "total_cost": "Custo total por porção",
+      "calculate": "Calcular ingredientes necessários",
+      "edit": "Editar",
+      "delete_confirm": "Excluir \"{name}\"? O histórico de vendas também será excluído. Isso não pode ser desfeito."
+    },
+    "edit": {
+      "title": "Editar receita",
+      "subtitle": "Atualize a receita e os ingredientes necessários"
+    },
+    "form": {
+      "name_label": "Nome da receita",
+      "name_placeholder": "ex.: Sopa de tomate",
+      "yield_label": "Rendimento (porções)",
+      "notes_label": "Modo de preparo / Observações (opcional)",
+      "notes_placeholder": "Modo de preparo, dicas de preparo...",
+      "ingredients_heading": "Ingredientes necessários",
+      "select_ingredient": "Selecione o ingrediente…",
+      "qty_placeholder": "Qtd./porção",
+      "remove_ingredient": "Remover ingrediente",
+      "add_ingredient": "Adicionar ingrediente",
+      "save_new": "Salvar receita",
+      "save_edit": "Salvar alterações",
+      "cancel": "Cancelar",
+      "errors": {
+        "missing_name": "Dê um nome para a receita.",
+        "no_ingredients": "Adicione pelo menos um ingrediente com quantidade."
+      }
+    },
+    "no_cost": "Sem preços ainda",
+    "cost_badge": "{cost} por porção",
+    "notes_heading": "Modo de preparo e notas"
+  },
+  "Shifts": {
+    "title": "Escala de turnos",
+    "subtitle": "{count, plural, =0 {Nenhum turno agendado} one {# turno agendado} other {# turnos agendados}}",
+    "add_heading": "Adicionar turno",
+    "team_member": "Membro da equipe",
+    "start": "Início",
+    "end": "Fim",
+    "role_label": "Função",
+    "role_placeholder": "ex.: Cozinheiro de linha",
+    "add": "+ Adicionar",
+    "upcoming": "Próximos",
+    "past": "Anteriores",
+    "empty": "Nenhum turno agendado ainda. Adicione o primeiro turno acima.",
+    "unnamed_member": "Usuário {id}",
+    "delete": "Excluir turno"
+  },
+  "Onboarding": {
+    "title": "Configure sua cozinha",
+    "heading": "Configure sua cozinha",
+    "subheading": "Só um passo rápido antes de começar.",
+    "restaurant_label": "Nome do restaurante ou cozinha",
+    "restaurant_placeholder": "ex.: Casa Lima",
+    "name_label": "Seu nome",
+    "language_label": "Idioma",
+    "submit": "Criar cozinha",
+    "invite_hint": "Vai entrar em uma equipe existente? Abra o link de convite que você recebeu.",
+    "errors": {
+      "missing_name": "Dê um nome para sua cozinha."
+    },
+    "trial_badge": "Seu teste grátis de 30 dias começa hoje"
+  },
+  "TrialOffer": {
+    "chef": "Chef",
+    "day": "Dia {day} de {total}",
+    "close": "Fechar",
+    "title": "Metade do teste, {name}. A {restaurant} está ganhando forma.",
+    "progress": "Até agora você calculou o custo de <strong>{recipes, plural, one {# receita} other {# receitas}}</strong>, registrou <strong>{portions, plural, one {# porção} other {# porções}}</strong> e trouxe <strong>{teammates, plural, one {# pessoa} other {# pessoas}}</strong> para a cozinha.",
+    "progress_offer": "Assine antes do fim do teste e mantenha tudo com um preço exclusivo do período de teste.",
+    "choose_plan": "Escolha seu plano",
+    "best_value": "Melhor custo · {percent}% off",
+    "percent_off": "{percent}% off",
+    "per_month": "/mês",
+    "first_period_total": "{amount} hoje",
+    "plans": {
+      "annual": {
+        "name": "1 ano",
+        "detail": "{percent}% off no primeiro ano · depois {regular}/ano"
+      },
+      "semiannual": {
+        "name": "6 meses",
+        "detail": "{percent}% off nos primeiros 6 meses · depois {regular} a cada 6 meses"
+      }
+    },
+    "cta": {
+      "annual": "Quero {percent}% off no primeiro ano",
+      "semiannual": "Quero {percent}% off nos primeiros 6 meses"
+    },
+    "no_charge": "Nada é cobrado até {date}. Cancele antes e você não paga nada.",
+    "not_now": "Agora não, continuar o teste",
+    "compare": "Comparar todos os planos",
+    "pros_title": "Se você assinar durante o teste",
+    "pro_discount": "O desconto do teste, garantido no seu primeiro {period}",
+    "pro_free_days": "{days, plural, one {Seu último dia grátis continua grátis} other {Seus # dias grátis restantes continuam grátis}}",
+    "pro_continuity": "Sem interrupção no dia 30: receitas, estoque e equipe seguem normalmente",
+    "period": {
+      "annual": "ano",
+      "semiannual": "semestre"
+    },
+    "cons_title": "Se você esperar",
+    "con_offer_ends": "A oferta termina junto com o teste, em {date}",
+    "con_pause": "A cozinha fica pausada até a assinatura (nada é apagado)",
+    "con_monthly": "O plano mensal continua disponível a qualquer momento por {price}/mês",
+    "questions": "Dúvidas antes de decidir? Responda qualquer e-mail do Sous Chef e uma pessoa vai te atender."
+  },
+  "AuthShell": {
+    "tagline": "Antes do serviço, você já sabe o que preparar, o que pedir e quanto custa cada prato.",
+    "ticket_title": "PREPARO · SEX",
+    "ticket_trays": "×{count} assadeiras",
+    "ticket_order": "PEDIDO"
   }
 }
