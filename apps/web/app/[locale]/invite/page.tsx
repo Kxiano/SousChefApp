@@ -1,75 +1,70 @@
-import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import { Users } from 'lucide-react'
 import { prisma } from '@sous-chef/db'
-import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
+import { getUser } from '@/lib/auth'
+import { Link } from '@/lib/navigation'
+import { AuthShell } from '@/components/auth-shell'
+import { buttonClass } from '@/components/ui/button'
+import { Alert } from '@/components/ui/alert'
+import { acceptInvite } from './actions'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Invite')
+  return { title: t('title') }
+}
 
 export default async function InvitePage({
   searchParams,
 }: {
-  searchParams: Promise<{ token: string }>
+  searchParams: Promise<{ token?: string }>
 }) {
   const { token } = await searchParams
+  const t = await getTranslations('Invite')
 
-  if (!token) {
-    return <div className="p-8 text-center text-red-600">Invalid or missing invite token.</div>
-  }
+  const invite = token
+    ? await prisma.inviteToken.findUnique({ where: { token }, include: { restaurant: true } })
+    : null
+  const valid = invite && !invite.usedAt && invite.expiresAt >= new Date()
 
-  // Verify token
-  const invite = await prisma.inviteToken.findUnique({
-    where: { token },
-    include: { restaurant: true },
-  })
-
-  if (!invite || invite.usedAt || invite.expiresAt < new Date()) {
-    return <div className="p-8 text-center text-red-600">This invite link is invalid or has expired.</div>
-  }
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (user) {
+  if (!token || !valid) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="p-8 bg-white shadow-xl rounded-xl max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold mb-4">Join {invite.restaurant.name}</h1>
-          <p className="mb-6">You are logged in as {user.email}. Do you want to join this kitchen team?</p>
-          <form action={async () => {
-            'use server'
-            const sb = await createClient()
-            const { data } = await sb.auth.getUser()
-            if (!data.user) return
-
-            // 1. Create or update profile
-            await prisma.profile.upsert({
-              where: { id: data.user.id },
-              update: { restaurantId: invite.restaurantId, role: 'staff', language: invite.restaurant.language },
-              create: { id: data.user.id, restaurantId: invite.restaurantId, role: 'staff', language: invite.restaurant.language }
-            })
-
-            // 2. Mark invite as used
-            await prisma.inviteToken.update({
-              where: { id: invite.id },
-              data: { usedAt: new Date() }
-            })
-
-            redirect('/dashboard')
-          }}>
-            <button className="w-full bg-black text-white p-2 rounded hover:bg-gray-800 transition-colors">Accept Invite</button>
-          </form>
-        </div>
-      </div>
+      <AuthShell>
+        <h1 className="font-display text-[30px] font-extrabold leading-tight tracking-[-0.02em]">{t('title')}</h1>
+        <Alert>{token ? t('invalid') : t('missing_token')}</Alert>
+        <Link href="/" className={buttonClass('secondary', 'lg', 'mt-6 w-full')}>{t('home')}</Link>
+      </AuthShell>
     )
   }
 
+  const user = await getUser()
+
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="p-8 bg-white shadow-xl rounded-xl max-w-md w-full text-center">
-        <h1 className="text-2xl font-bold mb-4">Join {invite.restaurant.name}</h1>
-        <p className="mb-6 text-gray-600">Please log in to accept this invite.</p>
-        <Link href={`/login?redirect=/invite?token=${token}`} className="w-full bg-black text-white p-2 rounded hover:bg-gray-800 transition-colors block">
-          Log in or Sign up
-        </Link>
-      </div>
-    </div>
+    <AuthShell>
+      <span className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-saffron-soft">
+        <Users size={22} className="text-saffron-dark" aria-hidden />
+      </span>
+      <h1 className="mt-5 font-display text-[32px] font-extrabold leading-[1.08] tracking-[-0.02em]">
+        {t('join', { restaurant: invite.restaurant.name })}
+      </h1>
+      {user ? (
+        <>
+          <p className="mt-2 text-[15.5px] text-muted">{t('logged_in_as', { email: user.email ?? '' })}</p>
+          <form action={acceptInvite.bind(null, token)} className="mt-7">
+            <button className={buttonClass('primary', 'lg', 'w-full font-bold')}>{t('accept')}</button>
+          </form>
+        </>
+      ) : (
+        <>
+          <p className="mt-2 text-[15.5px] text-muted">{t('log_in_to_accept')}</p>
+          <Link
+            href={{ pathname: '/login', query: { redirect: `/invite?token=${token}` } }}
+            className={buttonClass('dark', 'lg', 'mt-7 w-full')}
+          >
+            {t('log_in_or_sign_up')}
+          </Link>
+        </>
+      )}
+    </AuthShell>
   )
 }

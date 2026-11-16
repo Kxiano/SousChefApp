@@ -1,23 +1,24 @@
-import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@sous-chef/db'
-import { redirect } from 'next/navigation'
+import { requireProfile } from '@/lib/auth'
 import type { Metadata } from 'next'
-import { NewRecipeClient } from './new-recipe-client'
+import { getTranslations } from 'next-intl/server'
+import { RecipeForm } from '../recipe-form'
+import { createRecipe } from '../actions'
 
-export const metadata: Metadata = { title: 'New Recipe' }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Recipes')
+  return { title: t('new.title') }
+}
 
-export default async function NewRecipePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
+export default async function NewRecipePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams
+  const profile = await requireProfile()
 
   const ingredients = await prisma.ingredient.findMany({
     where: { restaurantId: profile.restaurantId },
     orderBy: { name: 'asc' },
-    select: { id: true, name: true, unit: true }
+    select: { id: true, name: true, unit: true },
   })
 
-  return <NewRecipeClient ingredients={ingredients} />
+  return <RecipeForm mode="new" ingredients={ingredients} action={createRecipe} backHref="/recipes" error={error} />
 }

@@ -69,3 +69,18 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Local editor and assistant tooling
+.claude/
+.gemini/
+.cursor/
+.codex/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+skills-lock.json
+
+# Design working files
+docs/design/
+
+*.tsbuildinfo

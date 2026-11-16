@@ -1,164 +1,114 @@
-import Link from 'next/link'
-import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
-import {
-  LayoutDashboard,
-  Package,
-  BookOpen,
-  Calculator,
-  UtensilsCrossed,
-  ShoppingCart,
-  Calendar,
-  TrendingUp,
-  MessageSquare,
-  StickyNote,
-  ChefHat,
-  LogOut,
-} from 'lucide-react'
+import { Suspense } from 'react'
+import { getFormatter, getTranslations } from 'next-intl/server'
+import { prisma } from '@sous-chef/db'
+import { requireProfile } from '@/lib/auth'
+import { TRIAL_DAYS, getPlanCatalog, getTrialState, planPricing } from '@/lib/billing'
+import { stripe } from '@/utils/stripe'
+import { Sidebar, type NavGroup } from '@/components/app-shell/sidebar'
+import { TrialOffer, type OfferPlan } from '@/components/trial-offer'
 
-const NAV_KEYS = [
-  { href: '/dashboard',        key: 'dashboard',   icon: LayoutDashboard },
-  { href: '/ingredients',      key: 'inventory',   icon: Package },
-  { href: '/recipes',          key: 'recipes',     icon: BookOpen },
-  { href: '/calculator',       key: 'calculator',  icon: Calculator },
-  { href: '/portions',         key: 'portions',    icon: UtensilsCrossed },
-  { href: '/purchase-orders',  key: 'purchases',   icon: ShoppingCart },
-  { href: '/shifts',           key: 'shifts',      icon: Calendar },
-  { href: '/best-sellers',     key: 'best_sellers',icon: TrendingUp },
-  { href: '/notes',            key: 'notes',       icon: StickyNote },
-  { href: '/chat',             key: 'ai_chef',     icon: MessageSquare },
-]
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const profile = await requireProfile()
+  const [t, format, restaurant, lowStock] = await Promise.all([
+    getTranslations('Navigation'),
+    getFormatter(),
+    prisma.restaurant.findUniqueOrThrow({ where: { id: profile.restaurantId } }),
+    prisma.ingredient.count({
+      where: { restaurantId: profile.restaurantId, quantity: { lte: prisma.ingredient.fields.lowStockThreshold } },
+    }),
+  ])
 
-export default async function AppLayout({
-  children,
-  params
-}: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
-}) {
-  const { locale } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/${locale}/login`)
+  const isOwner = profile.role === 'owner'
+  const trial = getTrialState(restaurant)
 
-  const t = await getTranslations('Navigation')
+  const groups: NavGroup[] = [
+    {
+      label: t('group_service'),
+      items: [
+        { href: '/dashboard', label: t('dashboard'), icon: 'dashboard' },
+        { href: '/calculator', label: t('calculator'), icon: 'calculator' },
+        { href: '/portions', label: t('portions'), icon: 'portions' },
+        { href: '/chat', label: t('ai_chef'), icon: 'chat' },
+      ],
+    },
+    {
+      label: t('group_kitchen'),
+      items: [
+        { href: '/ingredients', label: t('inventory'), icon: 'inventory', badge: lowStock },
+        { href: '/recipes', label: t('recipes'), icon: 'recipes' },
+        { href: '/purchase-orders', label: t('purchases'), icon: 'purchases' },
+        { href: '/best-sellers', label: t('best_sellers'), icon: 'bestSellers' },
+      ],
+    },
+    {
+      label: t('group_team'),
+      items: [
+        { href: '/shifts', label: t('shifts'), icon: 'shifts' },
+        { href: '/notes', label: t('notes'), icon: 'notes' },
+        { href: '/team', label: t('team'), icon: 'team' },
+      ],
+    },
+  ]
+
+  const offer = isOwner && trial.onFreeTrial && trial.showReminder ? await loadOffer() : null
+
+  async function loadOffer() {
+    if (!trial.onFreeTrial) return null
+    const [tOffer, recipes, sales, teammates, catalog] = await Promise.all([
+      getTranslations('TrialOffer'),
+      prisma.recipe.count({ where: { restaurantId: restaurant.id } }),
+      prisma.salesEvent.aggregate({ where: { restaurantId: restaurant.id }, _sum: { quantity: true } }),
+      prisma.profile.count({ where: { restaurantId: restaurant.id } }),
+      getPlanCatalog(stripe),
+    ])
+    const money = (amount: number, currency: string) => format.number(amount, { style: 'currency', currency })
+    const plans: OfferPlan[] = catalog
+      .filter((plan): plan is typeof plan & { id: OfferPlan['id'] } => plan.id !== 'monthly')
+      .map((plan) => {
+        const price = planPricing(plan, true)
+        return {
+          id: plan.id,
+          percent: price.percent,
+          perMonth: money(price.firstPeriodPerMonth, plan.currency),
+          firstPeriod: money(price.firstPeriod, plan.currency),
+          regular: money(price.regular, plan.currency),
+          regularPerMonth: money(price.regularPerMonth, plan.currency),
+        }
+      })
+      .reverse() // annual first
+    const monthly = catalog.find((plan) => plan.id === 'monthly')!
+    return {
+      name: (profile.displayName ?? '').split(' ')[0] || tOffer('chef'),
+      restaurant: restaurant.name,
+      day: trial.day,
+      totalDays: TRIAL_DAYS,
+      daysLeft: trial.daysLeft,
+      endsOn: format.dateTime(trial.endsAt, { day: 'numeric', month: 'long' }),
+      stats: { recipes, portions: Math.round(Number(sales._sum.quantity ?? 0)), teammates },
+      plans,
+      monthlyPrice: money(monthly.amount, monthly.currency),
+    }
+  }
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <aside
-        style={{
-          width: '220px',
-          flexShrink: 0,
-          backgroundColor: 'var(--color-surface-2)',
-          borderRight: '1px solid var(--color-border)',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '0',
-          overflowY: 'auto',
-        }}
-      >
-        {/* Logo */}
-        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '28px', height: '28px', borderRadius: '8px',
-              backgroundColor: 'var(--color-brand-500)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <ChefHat size={16} color="#000" />
-            </div>
-            <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--color-text-primary)' }}>
-              Sous Chef
-            </span>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '8px' }}>
-          {NAV_KEYS.map(({ href, key, icon: Icon }) => (
-            <Link
-              key={href}
-              href={`/${locale}${href}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 10px',
-                borderRadius: '8px',
-                fontSize: '13.5px',
-                color: 'var(--color-text-secondary)',
-                textDecoration: 'none',
-                transition: 'background 150ms var(--ease-out-strong), color 150ms',
-              }}
-              className="nav-link"
-            >
-              <Icon size={16} />
-              {t(key as any)}
-            </Link>
-          ))}
-        </nav>
-
-        {/* User + logout */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid var(--color-border)' }}>
-          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', padding: '0 10px 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {user.email}
-          </p>
-          <div style={{ display: 'flex', gap: '4px', padding: '0 10px 8px' }}>
-            <Link href="/en/dashboard" style={{ fontSize: '12px', color: 'var(--color-text-muted)', textDecoration: 'none' }}>EN</Link>
-            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>|</span>
-            <Link href="/pt-BR/dashboard" style={{ fontSize: '12px', color: 'var(--color-text-muted)', textDecoration: 'none' }}>PT</Link>
-          </div>
-          <form action="/api/stripe/portal" method="POST" style={{ marginBottom: '4px' }}>
-            <button
-              type="submit"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '8px 10px', borderRadius: '8px', fontSize: '13.5px',
-                color: 'var(--color-text-muted)', background: 'none', border: 'none',
-                cursor: 'pointer', width: '100%', transition: 'color 150ms',
-                textAlign: 'left'
-              }}
-              className="nav-link"
-            >
-              <TrendingUp size={16} />
-              {t('manage_billing')}
-            </button>
-          </form>
-          <form action="/auth/signout" method="POST">
-            <button
-              type="submit"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '8px 10px', borderRadius: '8px', fontSize: '13.5px',
-                color: 'var(--color-text-muted)', background: 'none', border: 'none',
-                cursor: 'pointer', width: '100%', transition: 'color 150ms',
-                textAlign: 'left'
-              }}
-              className="nav-link"
-            >
-              <LogOut size={16} />
-              {t('sign_out')}
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {children}
+    <div className="min-h-full lg:flex">
+      <Suspense>
+        <Sidebar
+          restaurantName={restaurant.name}
+          userLine={`${profile.displayName ?? ''} · ${isOwner ? t('owner') : t('staff')}`}
+          groups={groups}
+          trial={trial.onFreeTrial && !trial.ended ? {
+            title: t('trial_days_left', { days: trial.daysLeft }),
+            cta: t('trial_cta'),
+            percent: Math.round((trial.day / TRIAL_DAYS) * 100),
+          } : null}
+          labels={{ billing: t('manage_billing'), signOut: t('sign_out'), openMenu: t('open_menu'), closeMenu: t('close_menu'), app: t('app') }}
+        />
+      </Suspense>
+      <main className="min-w-0 flex-1">
+        <div className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-8 sm:py-8 animate-enter">{children}</div>
       </main>
-
-      <style>{`
-        .nav-link:hover {
-          background: var(--color-surface-3);
-          color: var(--color-text-primary);
-        }
-        .nav-link:active {
-          transform: scale(0.97);
-        }
-      `}</style>
+      {offer && <TrialOffer {...offer} />}
     </div>
   )
 }

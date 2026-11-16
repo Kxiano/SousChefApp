@@ -1,38 +1,42 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { prisma } from '@sous-chef/db'
-import { createClient } from '@/utils/supabase/server'
-
-async function getProfile() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
-  return profile
-}
+import { requireProfile } from '@/lib/auth'
 
 export async function createShift(formData: FormData) {
-  const profile = await getProfile()
+  const profile = await requireProfile()
+  const restaurantId = profile.restaurantId
+
+  const startsAt = new Date(formData.get('startsAt') as string)
+  const endsAt = new Date(formData.get('endsAt') as string)
+  if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime()) || endsAt <= startsAt) return
+
+  // Shifts can only be assigned to members of this restaurant.
+  const requestedProfileId = (formData.get('profileId') as string) || profile.id
+  const member = await prisma.profile.findFirst({
+    where: { id: requestedProfileId, restaurantId },
+    select: { id: true },
+  })
+  if (!member) return
+
   await prisma.shift.create({
     data: {
-      restaurantId: profile.restaurantId,
-      profileId: formData.get('profileId') as string || profile.id,
-      startsAt: new Date(formData.get('startsAt') as string),
-      endsAt: new Date(formData.get('endsAt') as string),
-      roleLabel: formData.get('roleLabel') as string || null,
-      notes: formData.get('notes') as string || null,
+      restaurantId,
+      profileId: member.id,
+      startsAt,
+      endsAt,
+      roleLabel: String(formData.get('roleLabel') ?? '').trim() || null,
+      notes: String(formData.get('notes') ?? '').trim() || null,
     },
   })
-  revalidatePath('/shifts')
+  revalidatePath('/[locale]/shifts', 'page')
+  revalidatePath('/[locale]/dashboard', 'page')
 }
 
 export async function deleteShift(id: string) {
-  const profile = await getProfile()
-  await prisma.shift.deleteMany({
-    where: { id, restaurantId: profile.restaurantId },
-  })
-  revalidatePath('/shifts')
+  const { restaurantId } = await requireProfile()
+  await prisma.shift.deleteMany({ where: { id, restaurantId } })
+  revalidatePath('/[locale]/shifts', 'page')
+  revalidatePath('/[locale]/dashboard', 'page')
 }

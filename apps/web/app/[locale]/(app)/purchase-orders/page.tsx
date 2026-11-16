@@ -1,26 +1,28 @@
-import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@sous-chef/db'
-import { redirect } from 'next/navigation'
+import { requireProfile } from '@/lib/auth'
 import type { Metadata } from 'next'
-import { ShoppingCart, Package, CheckCircle, Truck } from 'lucide-react'
+import { getFormatter, getTranslations } from 'next-intl/server'
+import { ShoppingCart, Package, CheckCircle, Truck, AlertTriangle, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/page-header'
+import { buttonClass } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, EmptyState, SectionLabel } from '@/components/ui/card'
+import { Field, Input } from '@/components/ui/form'
 import { createPurchaseOrder, updateOrderStatus, deletePurchaseOrder } from './actions'
 
-export const metadata: Metadata = { title: 'Purchase Orders' }
-
-const STATUS_COLORS: Record<string, string> = {
-  draft: 'var(--color-warning)',
-  sent: 'var(--color-brand-400)',
-  received: 'var(--color-success)',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('PurchaseOrders')
+  return { title: t('title') }
 }
 
-export default async function PurchaseOrdersPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+const STATUSES = ['draft', 'sent', 'received'] as const
 
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
+const STATUS_TONES = { draft: 'neutral', sent: 'brand', received: 'ok' } as const
+
+export default async function PurchaseOrdersPage() {
+  const profile = await requireProfile()
+  const [t, format] = await Promise.all([getTranslations('PurchaseOrders'), getFormatter()])
+  const qty = (value: unknown) => format.number(Number(value), { maximumFractionDigits: 2 })
 
   const restaurantId = profile.restaurantId
 
@@ -39,190 +41,143 @@ export default async function PurchaseOrdersPage() {
     }),
   ])
 
-  const belowThreshold = lowStockIngredients.filter(
-    i => Number(i.quantity) <= Number(i.lowStockThreshold)
-  )
+  const isLow = (i: { quantity: unknown; lowStockThreshold: unknown }) => Number(i.quantity) <= Number(i.lowStockThreshold)
+  const belowThreshold = lowStockIngredients.filter(isLow)
+  // Items to reorder first, then the rest alphabetically.
+  lowStockIngredients.sort((a, b) => Number(isLow(b)) - Number(isLow(a)))
 
   return (
-    <div style={{ padding: '32px', maxWidth: '960px' }}>
-      <PageHeader
-        title="Purchase Orders"
-        subtitle={`${orders.length} orders total`}
-      />
+    <div>
+      <PageHeader title={t('title')} subtitle={t('subtitle', { count: orders.length })} />
 
       {/* New PO form */}
-      <section style={{ marginTop: '28px' }}>
-        <h2 style={sectionHeadStyle}>Create New Order</h2>
+      <section className="mt-7">
+        <SectionLabel>{t('create.heading')}</SectionLabel>
         {belowThreshold.length > 0 && (
-          <p style={{ fontSize: '12px', color: 'var(--color-warning)', marginBottom: '10px' }}>
-            ⚠ {belowThreshold.length} ingredient{belowThreshold.length > 1 ? 's are' : ' is'} below threshold and pre-filled.
+          <p className="mb-3 flex items-center gap-2 text-[13.5px] font-medium text-paprika">
+            <AlertTriangle size={15} className="shrink-0" aria-hidden />
+            {t('create.below_threshold', { count: belowThreshold.length })}
           </p>
         )}
-        <form
-          action={createPurchaseOrder}
-          style={{
-            padding: '20px', backgroundColor: 'var(--color-surface-2)',
-            borderRadius: '12px', border: '1px solid var(--color-border)',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-            {lowStockIngredients.map((ing, _i) => (
-              <div key={ing.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: Number(ing.quantity) <= Number(ing.lowStockThreshold) ? 'var(--color-danger)' : 'var(--color-text-secondary)' }}>
-                  <Package size={13} />
-                  {ing.name} ({ing.unit}) — stock: {Number(ing.quantity).toFixed(2)}
-                  {Number(ing.quantity) <= Number(ing.lowStockThreshold) && ' ⚠'}
-                </span>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <input type="hidden" name="ingredientId" value={ing.id} />
-                  <input
-                    name="quantity"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    defaultValue={Number(ing.quantity) <= Number(ing.lowStockThreshold) ? Math.max(Number(ing.lowStockThreshold) - Number(ing.quantity), 0).toFixed(2) : '0'}
-                    style={{ ...inputStyle, width: '100px' }}
-                    placeholder="0"
-                  />
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{ing.unit}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginBottom: '12px' }}>
-            <label style={labelStyle}>Notes (optional)</label>
-            <input name="notes" placeholder="Supplier, urgency…" style={inputStyle} />
-          </div>
-          <button type="submit" style={primaryBtnStyle} className="create-btn">
-            <ShoppingCart size={14} /> Create Draft Order
-          </button>
-        </form>
+        <Card className="overflow-hidden">
+          <form action={createPurchaseOrder}>
+            <ul className="divide-y divide-line-soft">
+              {lowStockIngredients.map((ing) => {
+                const low = Number(ing.quantity) <= Number(ing.lowStockThreshold)
+                return (
+                  <li key={ing.id} className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 ${low ? 'bg-paprika-soft/50' : ''}`}>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <Package size={15} className={`shrink-0 ${low ? 'text-paprika' : 'text-muted'}`} aria-hidden />
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-2 text-[14px] font-medium">
+                          {ing.name}
+                          {low && <Badge tone="alert">{t('create.low')}</Badge>}
+                        </span>
+                        <span className={`block font-mono text-[12.5px] tabular ${low ? 'text-paprika' : 'text-muted'}`}>
+                          {t('create.in_stock', { stock: qty(ing.quantity), unit: ing.unit })}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="hidden" name="ingredientId" value={ing.id} />
+                      <Input
+                        name="quantity"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        aria-label={t('create.order_qty_label', { name: ing.name })}
+                        defaultValue={low ? Math.max(Number(ing.lowStockThreshold) - Number(ing.quantity), 0).toFixed(2) : '0'}
+                        placeholder="0"
+                        className="w-28 text-right font-mono tabular"
+                      />
+                      <span className="w-10 text-[12.5px] text-muted">{ing.unit}</span>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="flex flex-col gap-3 border-t border-line bg-sunken px-4 py-4 sm:flex-row sm:items-end sm:px-5">
+              <Field label={t('create.notes')} htmlFor="po-notes" className="flex-1">
+                <Input id="po-notes" name="notes" placeholder={t('create.notes_placeholder')} />
+              </Field>
+              <button type="submit" className={buttonClass('primary')}>
+                <ShoppingCart size={16} aria-hidden /> {t('create.submit')}
+              </button>
+            </div>
+          </form>
+        </Card>
       </section>
 
       {/* Orders list */}
-      <section style={{ marginTop: '36px' }}>
-        <h2 style={sectionHeadStyle}>Orders</h2>
+      <section className="mt-9">
+        <SectionLabel>{t('orders.heading')}</SectionLabel>
         {orders.length === 0 ? (
-          <div style={emptyStyle}>No purchase orders yet. Create one above.</div>
+          <EmptyState>{t('orders.empty')}</EmptyState>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {orders.map(order => (
-              <div
-                key={order.id}
-                style={{
-                  backgroundColor: 'var(--color-surface-2)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--color-border)',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Order header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--color-border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{
-                      fontSize: '11px', padding: '2px 8px', borderRadius: '99px',
-                      fontWeight: 600, textTransform: 'uppercase',
-                      backgroundColor: `${STATUS_COLORS[order.status]}22`,
-                      color: STATUS_COLORS[order.status],
-                      border: `1px solid ${STATUS_COLORS[order.status]}44`,
-                    }}>
-                      {order.status}
-                    </span>
-                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                      {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                    {order.notes && (
-                      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>
-                        {order.notes}
+          <div className="flex flex-col gap-3">
+            {orders.map((order) => {
+              const known = STATUSES.includes(order.status as (typeof STATUSES)[number])
+              const status = order.status as (typeof STATUSES)[number]
+              return (
+                <Card key={order.id} className="overflow-hidden">
+                  {/* Order header */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5">
+                    <div className="flex min-w-0 flex-wrap items-center gap-3">
+                      <Badge tone={known ? STATUS_TONES[status] : 'neutral'}>
+                        {known ? t(`status.${status}`) : order.status}
+                      </Badge>
+                      <span className="text-[13px] text-muted">
+                        {format.dateTime(order.createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    {order.status === 'draft' && (
-                      <>
-                        <form action={updateOrderStatus.bind(null, order.id, 'sent')}>
-                          <button type="submit" style={outlineBtnStyle} className="status-btn">
-                            <Truck size={12} /> Mark Sent
+                      {order.notes && <span className="text-[13px] italic text-body">{order.notes}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {order.status === 'draft' && (
+                        <>
+                          <form action={updateOrderStatus.bind(null, order.id, 'sent')}>
+                            <button type="submit" className={buttonClass('secondary')}>
+                              <Truck size={15} aria-hidden /> {t('orders.mark_sent')}
+                            </button>
+                          </form>
+                          <form action={deletePurchaseOrder.bind(null, order.id)}>
+                            <button type="submit" className={buttonClass('danger')}>
+                              <Trash2 size={15} aria-hidden /> {t('orders.delete')}
+                            </button>
+                          </form>
+                        </>
+                      )}
+                      {order.status === 'sent' && (
+                        <form action={updateOrderStatus.bind(null, order.id, 'received')}>
+                          <button type="submit" className={buttonClass('secondary', 'md', 'hover:border-basil hover:bg-basil-soft hover:text-basil')}>
+                            <CheckCircle size={15} aria-hidden /> {t('orders.mark_received')}
                           </button>
                         </form>
-                        <form action={deletePurchaseOrder.bind(null, order.id)}>
-                          <button type="submit" style={deleteBtnStyle} className="delete-btn">Delete</button>
-                        </form>
-                      </>
-                    )}
-                    {order.status === 'sent' && (
-                      <form action={updateOrderStatus.bind(null, order.id, 'received')}>
-                        <button type="submit" style={{ ...outlineBtnStyle, borderColor: 'var(--color-success)', color: 'var(--color-success)' }} className="status-btn">
-                          <CheckCircle size={12} /> Mark Received
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </div>
-
-                {/* Items */}
-                <div style={{ padding: '12px 16px' }}>
-                  {order.items.map(item => (
-                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '3px 0', color: 'var(--color-text-secondary)' }}>
-                      <span>{item.ingredient.name}</span>
-                      <span style={{ color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                        {Number(item.quantityRequested).toFixed(2)} {item.ingredient.unit}
-                        {item.quantityReceived != null && (
-                          <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>
-                            {' '}(rcvd: {Number(item.quantityReceived).toFixed(2)})
-                          </span>
-                        )}
-                      </span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+                  </div>
+
+                  {/* Items */}
+                  <ul className="px-4 py-2.5 sm:px-5">
+                    {order.items.map((item) => (
+                      <li key={item.id} className="flex items-baseline justify-between gap-3 py-1.5 text-[14px]">
+                        <span className="text-body">{item.ingredient.name}</span>
+                        <span className="text-right font-mono font-medium tabular">
+                          {qty(item.quantityRequested)} {item.ingredient.unit}
+                          {item.quantityReceived != null && (
+                            <span className="font-normal text-basil">
+                              {' '}{t('orders.received_qty', { quantity: qty(item.quantityReceived) })}
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )
+            })}
           </div>
         )}
       </section>
-
-      <style>{`
-        .create-btn:hover { opacity: 0.85 !important; }
-        .status-btn:hover { opacity: 0.75 !important; }
-        .delete-btn:hover { color: var(--color-danger) !important; border-color: var(--color-danger) !important; }
-        input::placeholder { color: var(--color-text-muted); }
-      `}</style>
     </div>
   )
-}
-
-const sectionHeadStyle: React.CSSProperties = {
-  fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)',
-  textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px',
-}
-const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '11px', fontWeight: 500,
-  color: 'var(--color-text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em',
-}
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', borderRadius: '8px',
-  backgroundColor: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
-  color: 'var(--color-text-primary)', fontSize: '13.5px', outline: 'none',
-}
-const primaryBtnStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: '6px',
-  padding: '9px 18px', borderRadius: '8px', backgroundColor: 'var(--color-brand-500)',
-  border: 'none', color: '#000', cursor: 'pointer', fontWeight: 600, fontSize: '13px',
-  transition: 'opacity 150ms',
-}
-const outlineBtnStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: '5px',
-  padding: '5px 12px', borderRadius: '7px', fontSize: '12px',
-  backgroundColor: 'transparent', border: '1px solid var(--color-border)',
-  color: 'var(--color-text-secondary)', cursor: 'pointer', transition: 'opacity 150ms',
-}
-const deleteBtnStyle: React.CSSProperties = {
-  padding: '5px 12px', borderRadius: '7px', fontSize: '12px',
-  backgroundColor: 'transparent', border: '1px solid var(--color-border)',
-  color: 'var(--color-text-muted)', cursor: 'pointer', transition: 'color 150ms, border-color 150ms',
-}
-const emptyStyle: React.CSSProperties = {
-  padding: '48px 24px', textAlign: 'center', borderRadius: '12px',
-  border: '1px dashed var(--color-border)', color: 'var(--color-text-muted)', fontSize: '14px',
 }

@@ -1,11 +1,13 @@
 ﻿'use client'
 
-import { Send, Bot, User, Loader2 } from 'lucide-react'
+import { ChefHat, Loader2, Send } from 'lucide-react'
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 type Message = { id: string; role: 'user' | 'assistant'; content: string }
 
 export function ChatUI({ initialMessages }: { initialMessages: Message[] }) {
+  const t = useTranslations('Chat')
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -41,36 +43,66 @@ export function ChatUI({ initialMessages }: { initialMessages: Message[] }) {
       }
     } catch (error) {
       console.error('Chat request failed:', error)
-      setMessages((current) => current.map((message) => message.id === assistantId ? { ...message, content: 'Sorry, I could not send that message. Please try again.' } : message))
+      setMessages((current) => current.map((message) => message.id === assistantId ? { ...message, content: t('send_error') } : message))
     } finally { setIsLoading(false) }
   }
 
+  const canSend = input.trim().length > 0 && !isLoading
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
+    // Fills the screen under the page header: phone top bar + padding + header on small
+    // screens, padding + header on desktop.
+    <div className="mt-6 flex h-[calc(100dvh-15rem)] min-h-[420px] flex-col overflow-hidden rounded-card border border-line bg-surface lg:h-[calc(100dvh-12.5rem)]">
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
         {messages.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-muted)' }}>
-            <Bot size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
-            <p>Hi! I&apos;m your AI Sous Chef.</p><p style={{ fontSize: '14px', marginTop: '8px' }}>Ask me about inventory, recipes, or tell me to log a sale.</p>
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-[16px] bg-ink">
+              <ChefHat size={26} className="text-saffron" aria-hidden />
+            </span>
+            <p className="font-display text-[20px] font-bold">{t('empty_greeting')}</p>
+            <p className="mt-1.5 max-w-sm text-[14.5px] text-muted">{t('empty_hint')}</p>
           </div>
-        ) : <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '800px', margin: '0 auto' }}>
-          {messages.map((message) => <div key={message.id} style={{ display: 'flex', gap: '16px', flexDirection: message.role === 'user' ? 'row-reverse' : 'row' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, backgroundColor: message.role === 'user' ? 'var(--color-brand-500)' : 'var(--color-surface-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {message.role === 'user' ? <User size={18} color="#000" /> : <Bot size={18} color="var(--color-brand-400)" />}
-            </div>
-            <div style={{ maxWidth: '75%', padding: '12px 16px', borderRadius: '12px', backgroundColor: message.role === 'user' ? 'var(--color-surface-2)' : 'transparent', border: message.role === 'user' ? '1px solid var(--color-border)' : 'none', color: 'var(--color-text-primary)', fontSize: '14.5px', lineHeight: '1.6' }}><p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message.content}</p></div>
-          </div>)}
-          {isLoading && <div style={{ display: 'flex', gap: '16px' }}><div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, backgroundColor: 'var(--color-surface-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Bot size={18} color="var(--color-brand-400)" /></div><div style={{ display: 'flex', alignItems: 'center', height: '36px' }}><Loader2 size={18} className="animate-spin" color="var(--color-text-muted)" /></div></div>}
-          <div ref={messagesEndRef} />
-        </div>}
+        ) : (
+          <div className="mx-auto flex max-w-[760px] flex-col gap-3">
+            {messages.map((message) =>
+              message.role === 'user' ? (
+                <p key={message.id} className="max-w-[85%] self-end whitespace-pre-wrap rounded-[14px] rounded-br-[4px] bg-ink px-4 py-2.5 text-[14.5px] leading-relaxed text-white sm:max-w-[75%]">
+                  {message.content}
+                </p>
+              ) : message.content ? (
+                <p key={message.id} className="max-w-[85%] self-start whitespace-pre-wrap rounded-[14px] rounded-bl-[4px] bg-[#F3F1EC] px-4 py-2.5 text-[14.5px] leading-relaxed text-ink sm:max-w-[75%]">
+                  {message.content}
+                </p>
+              ) : null
+            )}
+            {isLoading && (
+              <div className="flex items-center gap-2 self-start rounded-[14px] rounded-bl-[4px] bg-[#F3F1EC] px-4 py-3 text-muted">
+                <Loader2 size={16} className="animate-spin" aria-label={t('thinking')} />
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </div>
-      <div style={{ padding: '24px 32px', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
-        <form onSubmit={handleSubmit} style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
-          <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask your AI Chef..." disabled={isLoading} style={{ width: '100%', padding: '16px 20px', paddingRight: '56px', borderRadius: '16px', backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', fontSize: '15px', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', transition: 'border-color 200ms' }} className="chat-input" />
-          <button type="submit" disabled={isLoading || !input.trim()} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '12px', backgroundColor: input.trim() && !isLoading ? 'var(--color-brand-500)' : 'var(--color-surface-4)', border: 'none', color: input.trim() && !isLoading ? '#000' : 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed', transition: 'background 150ms, color 150ms' }}><Send size={18} style={{ marginLeft: '2px' }} /></button>
-        </form>
-      </div>
-      <style>{`.chat-input:focus { border-color: var(--color-brand-500) !important; } .animate-spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+
+      <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-line bg-sunken p-3 sm:p-4">
+        <input
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          placeholder={t('placeholder')}
+          aria-label={t('input_label')}
+          disabled={isLoading}
+          className="h-12 min-w-0 flex-1 rounded-[12px] border border-line-strong bg-surface px-4 text-[15px] text-ink placeholder:text-[#8A9097] transition-[border-color,box-shadow] duration-150 focus:border-ink focus:outline-none focus:ring-2 focus:ring-saffron/40 disabled:opacity-60"
+        />
+        <button
+          type="submit"
+          aria-label={t('send')}
+          disabled={!canSend}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[12px] bg-saffron text-ink transition-[background-color,transform] duration-150 hover:bg-[#E59B0C] active:scale-[0.96] disabled:cursor-not-allowed disabled:bg-[#EFEDE7] disabled:text-muted"
+        >
+          <Send size={18} aria-hidden />
+        </button>
+      </form>
     </div>
   )
 }

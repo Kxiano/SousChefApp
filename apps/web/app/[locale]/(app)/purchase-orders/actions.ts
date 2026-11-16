@@ -1,88 +1,81 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { prisma } from '@sous-chef/db'
-import { createClient } from '@/utils/supabase/server'
-
-async function getProfile() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
-  return profile
-}
+import { requireProfile } from '@/lib/auth'
 
 export async function createPurchaseOrder(formData: FormData) {
-  const profile = await getProfile()
+  const profile = await requireProfile()
   const restaurantId = profile.restaurantId
 
-  const ingredientIds = formData.getAll('ingredientId') as string[]
-  const quantities = formData.getAll('quantity') as string[]
+  const ingredientIds = formData.getAll('ingredientId').map(String)
+  const quantities = formData.getAll('quantity').map(String)
+
+  // Only order this restaurant's own ingredients, in positive amounts.
+  const owned = await prisma.ingredient.findMany({
+    where: { restaurantId, id: { in: ingredientIds.filter(Boolean) } },
+    select: { id: true },
+  })
+  const ownedIds = new Set(owned.map((ingredient) => ingredient.id))
+  const items = ingredientIds
+    .map((ingredientId, i) => ({ ingredientId, quantityRequested: parseFloat(quantities[i]) || 0 }))
+    .filter((item) => ownedIds.has(item.ingredientId) && item.quantityRequested > 0)
+  if (items.length === 0) return
 
   await prisma.purchaseOrder.create({
     data: {
       restaurantId,
       status: 'draft',
-      notes: formData.get('notes') as string || null,
+      notes: String(formData.get('notes') ?? '').trim() || null,
       createdById: profile.id,
-      items: {
-        create: ingredientIds.map((ingredientId, i) => ({
-          ingredientId,
-          quantityRequested: parseFloat(quantities[i]) || 0,
-        })),
-      },
+      items: { create: items },
     },
   })
 
-  revalidatePath('/purchase-orders')
+  revalidatePath('/[locale]/purchase-orders', 'page')
 }
 
 export async function updateOrderStatus(id: string, status: 'draft' | 'sent' | 'received') {
-  const profile = await getProfile()
-  const restaurantId = profile.restaurantId
+  const { restaurantId } = await requireProfile()
 
   if (status === 'received') {
-    const order = await prisma.purchaseOrder.findFirst({
-      where: { id, restaurantId },
-      include: { items: true },
-    })
-
-    if (order && order.status !== 'received') {
-      await prisma.$transaction(async (tx) => {
-        await tx.purchaseOrder.update({
-          where: { id },
-          data: { status: 'received' },
-        })
-
-        for (const item of order.items) {
-          await tx.purchaseOrderItem.update({
-            where: { id: item.id },
-            data: { quantityReceived: item.quantityRequested },
-          })
-
-          await tx.ingredient.update({
-            where: { id: item.ingredientId },
-            data: { quantity: { increment: item.quantityRequested } },
-          })
-        }
+    await prisma.$transaction(async (tx) => {
+      // Claim the order first: if two people click "received" at once, only one
+      // of them adds the delivered stock.
+      const { count } = await tx.purchaseOrder.updateMany({
+        where: { id, restaurantId, status: { not: 'received' } },
+        data: { status: 'received' },
       })
-    }
+      if (count === 0) return
+
+      const items = await tx.purchaseOrderItem.findMany({ where: { purchaseOrderId: id } })
+      for (const item of items) {
+        await tx.purchaseOrderItem.update({
+          where: { id: item.id },
+          data: { quantityReceived: item.quantityRequested },
+        })
+        await tx.ingredient.updateMany({
+          where: { id: item.ingredientId, restaurantId },
+          data: { quantity: { increment: item.quantityRequested } },
+        })
+      }
+    })
+    revalidatePath('/[locale]/ingredients', 'page')
   } else {
+    // A received order is final; it cannot move back to draft or sent.
     await prisma.purchaseOrder.updateMany({
-      where: { id, restaurantId },
+      where: { id, restaurantId, status: { not: 'received' } },
       data: { status },
     })
   }
 
-  revalidatePath('/purchase-orders')
+  revalidatePath('/[locale]/purchase-orders', 'page')
 }
 
 export async function deletePurchaseOrder(id: string) {
-  const profile = await getProfile()
+  const { restaurantId } = await requireProfile()
   await prisma.purchaseOrder.deleteMany({
-    where: { id, restaurantId: profile.restaurantId, status: 'draft' },
+    where: { id, restaurantId, status: 'draft' },
   })
-  revalidatePath('/purchase-orders')
+  revalidatePath('/[locale]/purchase-orders', 'page')
 }

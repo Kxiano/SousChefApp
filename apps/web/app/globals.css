@@ -1,70 +1,96 @@
 @import "tailwindcss";
 
+/*
+ * "The Pass" design system. Use these through Tailwind classes:
+ * bg-ground, bg-surface, text-ink, text-muted, border-line, bg-saffron, text-basil,
+ * text-paprika, font-display, font-mono ...
+ */
+@theme inline {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
 @theme {
-  --font-sans: 'Geist', system-ui, sans-serif;
+  /* Grounds and text */
+  --color-ground: #F6F5F1;      /* page background, warm steel white */
+  --color-surface: #FFFFFF;     /* cards, sidebar, inputs */
+  --color-sunken: #FBFAF7;      /* card footers, table heads */
+  --color-ink: #16181B;         /* text, dark buttons, dark panels */
+  --color-ink-2: #202328;       /* cards on dark panels */
+  --color-body: #3C4147;        /* secondary text */
+  --color-muted: #5B6168;       /* labels, hints (4.5:1 on ground) */
+  --color-line: #E4E2DC;        /* borders */
+  --color-line-strong: #D9D6CE; /* input and secondary button borders */
+  --color-line-soft: #F0EEE8;   /* row dividers */
 
-  /* Brand palette: near-black + warm amber accent + white */
-  --color-brand-50:  #fffbeb;
-  --color-brand-100: #fef3c7;
-  --color-brand-200: #fde68a;
-  --color-brand-300: #fcd34d;
-  --color-brand-400: #fbbf24;
-  --color-brand-500: #f59e0b;
-  --color-brand-600: #d97706;
-  --color-brand-700: #b45309;
-  --color-brand-800: #92400e;
-  --color-brand-900: #78350f;
+  /* Brand and status */
+  --color-saffron: #F2A516;     /* brand, primary actions */
+  --color-saffron-dark: #8A5A00;/* saffron text on light grounds */
+  --color-saffron-soft: #FFF3D6;
+  --color-saffron-wash: #FFFBF0;
+  --color-basil: #2E7D4F;       /* ok, in stock */
+  --color-basil-soft: #E6F1EA;
+  --color-paprika: #C8402A;     /* alerts, shortages */
+  --color-paprika-dark: #8F2A1A;
+  --color-paprika-soft: #FCECE8;
 
-  --color-surface: #0f0f0f;
-  --color-surface-2: #1a1a1a;
-  --color-surface-3: #222222;
-  --color-surface-4: #2d2d2d;
+  --radius-card: 14px;
+  --radius-control: 10px;
 
-  --color-border: #2d2d2d;
-  --color-border-subtle: #1f1f1f;
-
-  --color-text-primary:   #f5f5f5;
-  --color-text-secondary: #a3a3a3;
-  --color-text-muted:     #6b6b6b;
-
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-
-  /* Easing tokens from emil-design-eng */
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --animate-enter: enter 420ms var(--ease-out-strong) both;
+  --animate-dialog: dialog 260ms var(--ease-out-strong) both;
+  --animate-fade: fade 200ms ease-out both;
+
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes dialog {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
-/* Base reset */
-*, *::before, *::after { box-sizing: border-box; }
+/* In the base layer so Tailwind utilities (e.g. outline-none) can override them. */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
 
-html, body { height: 100%; }
+  html, body { height: 100%; }
 
-body {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  -webkit-font-smoothing: antialiased;
+  body {
+    background-color: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Numbers line up in tables and tickets */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-line-strong); border-radius: 99px; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-saffron);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-saffron);
+    color: var(--color-ink);
+  }
+
+  select option { background: var(--color-surface); color: var(--color-ink); }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-surface-4); border-radius: 99px; }
-
-/* Focus ring */
-:focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
-}
-
-/* Selection */
-::selection {
-  background: var(--color-brand-500);
-  color: #000;
-}
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

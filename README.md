@@ -39,18 +39,38 @@ Kitchen operations move quickly. Sous Chef gives restaurant teams a shared sourc
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/home-screen.png" alt="Sous Chef home screen" width="860" />
+  <img src="docs/screenshots/landing.png" alt="Sous Chef landing page with the prep calculator" width="860" />
 </p>
 
-<br />
+<p align="center"><sub>The app below is filled with a fictional demo kitchen, Palazzo Vellani: a 23-dish Italian menu, 10 people on the team and a month of service. All names, emails and figures are made up.</sub></p>
 
-| Kitchen overview | Ingredient inventory |
+| Kitchen overview | Prep calculator |
 | --- | --- |
-| ![Kitchen overview — stat cards and upcoming shifts](docs/screenshots/dashboard.png) | ![Ingredient inventory — stock levels and low-stock alerts](docs/screenshots/inventory-purchase-orders.png) |
+| ![Dashboard: low-stock alerts, sales today, upcoming shifts and urgent notes](docs/screenshots/dashboard.png) | ![Prep calculator: ossobuco for a 60-guest wedding, with the veal shortage flagged](docs/screenshots/calculator.png) |
 
-| Recipe costing | AI Sous Chef |
+| Recipe book | Recipe costing |
 | --- | --- |
-| ![Recipe detail — ingredients, quantities, and cost per portion](docs/screenshots/recipe-calculator.png) | ![AI Sous Chef — streaming chat assistant](docs/screenshots/ai-sous-chef.png) |
+| ![Recipe book: antipasti, primi, secondi and dolci with cost per portion](docs/screenshots/recipes.png) | ![Recipe detail: ingredients per portion and cost per plate](docs/screenshots/recipe.png) |
+
+| Ingredient inventory | Ready portions |
+| --- | --- |
+| ![Inventory: stock levels, thresholds and cost per unit](docs/screenshots/inventory.png) | ![Ready portions: prepared stock with sold and discarded counts for today](docs/screenshots/portions.png) |
+
+| Purchase orders | New order |
+| --- | --- |
+| ![Purchase orders: drafts, sent and received orders by supplier](docs/screenshots/purchase-orders.png) | ![New purchase order with low-stock items first and pre-filled](docs/screenshots/purchase-orders-form.png) |
+
+| Shift schedule | Note board |
+| --- | --- |
+| ![Shift schedule: the brigade for the week, split by service](docs/screenshots/shifts.png) | ![Note board: urgent allergy and equipment notes pinned on top](docs/screenshots/notes.png) |
+
+| AI Sous Chef | Team and invites |
+| --- | --- |
+| ![AI Sous Chef: planning orders and prep for a wedding on top of a full Saturday](docs/screenshots/ai-sous-chef.png) | ![Team: members, roles and invite links](docs/screenshots/team.png) |
+
+| Best sellers (last 30 days) | Mid-trial offer |
+| --- | --- |
+| ![Best sellers: dishes ranked by sales over the last 30 days, in a scrolling list](docs/screenshots/best-sellers.png) | ![Mid-trial offer: plan choice with the trial discount](docs/screenshots/trial-offer.png) |
 
 ## Tech stack
 

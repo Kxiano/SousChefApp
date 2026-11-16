@@ -1,29 +1,25 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { prisma } from '@sous-chef/db'
-import { createClient } from '@/utils/supabase/server'
-
-async function getProfile() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile) redirect('/login')
-  return profile
-}
+import { requireProfile } from '@/lib/auth'
 
 export async function recordManualSale(formData: FormData) {
-  const profile = await getProfile()
+  const profile = await requireProfile()
   const recipeId = formData.get('recipeId') as string
   const quantity = parseFloat(formData.get('quantity') as string) || 0
   if (!recipeId || quantity <= 0) return
 
+  const recipe = await prisma.recipe.findFirst({
+    where: { id: recipeId, restaurantId: profile.restaurantId },
+    select: { id: true },
+  })
+  if (!recipe) return
+
   await prisma.salesEvent.create({
     data: {
       restaurantId: profile.restaurantId,
-      recipeId,
+      recipeId: recipe.id,
       quantity,
       eventType: 'sold',
       source: 'manual',
@@ -31,5 +27,5 @@ export async function recordManualSale(formData: FormData) {
     },
   })
 
-  revalidatePath('/best-sellers')
+  revalidatePath('/[locale]/best-sellers', 'page')
 }
